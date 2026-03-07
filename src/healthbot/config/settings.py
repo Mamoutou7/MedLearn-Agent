@@ -23,5 +23,3 @@ class Settings:
 
 
 settings = Settings()
-print(settings.openai_api_key)
-print(settings.tavily_api_key)
