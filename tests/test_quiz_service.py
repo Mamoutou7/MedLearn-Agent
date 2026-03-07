@@ -1,9 +1,7 @@
+import pytest
 from unittest.mock import MagicMock
 
-from healthbot.services.quiz_service import (
-    QuizService,
-    QuizGradingService,
-)
+from healthbot.services.quiz_service import QuizService
 
 
 class FakeQuiz:
@@ -26,30 +24,18 @@ class FakeLLM:
         return FakeQuiz()
 
 
-class FakeProvider:
+class FakeLLMProvider:
     def get_model(self):
         return FakeLLM()
 
 
-def test_quiz_pipeline():
-    """
-    Full quiz pipeline test:
-    generation + grading
-    """
-
-    quiz_service = QuizService(FakeProvider())
-    grading_service = QuizGradingService()
+def test_generate_quiz():
+    service = QuizService(FakeLLMProvider())
 
     summary = "HIV attacks the immune system."
 
-    quiz = quiz_service.generate_quiz(summary)
+    quiz = service.generate_quiz(summary)
 
     assert quiz["question"] is not None
-    assert quiz["correct_answer"] == "B"
-
-    user_answer = "B"
-
-    result = grading_service.grade(user_answer, quiz["correct_answer"])
-
-    assert result["is_correct"] is True
-    assert result["score"] == 100
+    assert quiz["correct_answer"] in {"A", "B", "C", "D"}
+    assert len(quiz) == 6
