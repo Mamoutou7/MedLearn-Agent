@@ -5,7 +5,7 @@ External tool for retrieving health information from the web.
 from typing import Dict
 from langchain_core.tools import tool
 from tavily import TavilyClient
-from src.healthbot.config.settings import settings
+from src.healthbot.core.settings import settings
 
 @tool
 def med_web_search(question: str) -> Dict:
