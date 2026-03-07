@@ -49,6 +49,8 @@ class Settings:
 
         if not tavily:
             raise EnvironmentError("TAVILY_API_KEY missing")
+        if not model:
+            raise EnvironmentError("MODEL_NAME missing")
 
         return cls(openai_api_key=openai, tavily_api_key=tavily, model_name=model)
 
