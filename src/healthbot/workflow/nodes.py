@@ -2,24 +2,27 @@
 Workflow nodes used by the LangGraph state machine.
 """
 
-from __future__ import annotations
 from typing import Dict, Literal
 
-from langchain_core.messages import (
-    AIMessage,
-    HumanMessage,
-    SystemMessage,
-)
-from langgraph.types import interrupt, Command
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langgraph.types import Command, interrupt
 
+from src.healthbot.core.exceptions import LLMServiceError
+from src.healthbot.core.logging import get_logger
 from src.healthbot.domain.models import WorkflowState
 from src.healthbot.infra.llm_provider import LLMProvider
-from src.healthbot.services.health_validator import HealthValidator
-from src.healthbot.core.logging import get_logger
-from src.healthbot.core.exceptions import LLMServiceError
-from src.healthbot.services.quiz_service import QuizService, QuizGradingService
+from src.healthbot.prompts.health_agent import (
+    build_health_agent_messages,
+    build_welcome_messages,
+)
 from src.healthbot.services.explanation_service import ExplanationService
-from src.healthbot.services.quiz_service import QuizApprovalService
+from src.healthbot.services.health_validator import HealthValidator
+from src.healthbot.services.quiz_service import (
+    QuizApprovalService,
+    QuizGradingService,
+    QuizService,
+)
+
 
 logger = get_logger(__name__)
 
@@ -27,7 +30,6 @@ logger = get_logger(__name__)
 class HealthWorkflowNodes:
     """
     Collection of workflow nodes used in the LangGraph state machine.
-
     Each node is a method of this class.
     """
 
@@ -45,38 +47,14 @@ class HealthWorkflowNodes:
         """
         Entry point of the workflow.
         """
-
+        question = state.get("question", "")
         logger.info("Starting new HealthBot session")
-
-        system_prompt = """
-            You are HealthBot, a friendly assistant that helps people understand health topics.
-            
-            Personality:
-            - Warm and empathetic
-            - Encouraging and supportive
-            - Use simple patient-friendly language
-            
-            Rules:
-            - Use bullet points
-            - Call web_search_tool only if needed
-            
-            Goal:
-            Create a safe environment where users feel comfortable asking
-            health-related questions.
-            
-            Entry Point Message:
-            When starting a conversation, warmly welcome the patient and ask what health topic or medical condition they'd like to learn about. 
-            Make them feel comfortable and supported.
-    
-            Example welcome message:
-            Hello! I'm your friendly HealthBot assistant, and I'm here to help you learn about any health topics or medical conditions you're interested in. 
-            I want to create a safe and supportive space for your health education journey. 
-        """
 
         return {
             "messages": [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=state["question"]),
+                *build_welcome_messages(question=question),
+                SystemMessage(content="Answer the user's health question clearly and safely."),
+                HumanMessage(content=question),
             ]
         }
 
@@ -108,13 +86,19 @@ class HealthWorkflowNodes:
         Main LLM agent node.
         """
 
-        messages = state["messages"]
+        question = state.get("question", "")
+        history = state.get("messages", [])
 
         logger.info("Running health agent")
 
         try:
-            response = self.llm.invoke(messages)
+            prompt_messages = build_health_agent_messages(question=question)
 
+            if history:
+                messages = prompt_messages[:-1] + history[-4:] + [prompt_messages[-1]]
+            else:
+                messages = prompt_messages
+            response = self.llm.invoke(messages)
             return {"messages": [response]}
 
         except Exception as exc:
