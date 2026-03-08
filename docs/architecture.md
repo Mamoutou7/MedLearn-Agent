@@ -1,582 +1,395 @@
-    # MedLearn Agent Architecture
+# MedLearn Agent Architecture
 
 ## Overview
 
-MedLearn Agent is a modular AI health education system designed around a **workflow-oriented agent architecture**.
+MedLearn Agent is a **workflow-driven health education assistant**.
+It combines a FastAPI delivery layer, a LangGraph orchestration layer, domain-oriented services, and lightweight observability.
 
-The application combines:
+The project is well positioned as a solid prototype for a production-grade AI application, with clear module boundaries and a simple resumable interaction model.
 
-- **LangGraph** for orchestration
-- **FastAPI** for API delivery
-- **service-layer abstractions** for business logic
-- **observability primitives** for debugging and monitoring
-- **clean separation of concerns** to support future production evolution
+## Architecture diagram
 
-The architecture is intentionally designed to make the project maintainable, testable, and extensible toward more advanced AI capabilities such as persistent memory, streaming, RAG, and multi-agent collaboration.
+![MedLearn Agent graph](../healthbot_graph.png)
 
----
+## Design goals
 
-## Architectural Principles
+The architecture aims to be:
 
-### 1. Separation of concerns
+- **modular** — each layer has a single clear responsibility
+- **testable** — business logic is separated from HTTP and orchestration
+- **resumable** — the quiz workflow supports interrupt/resume interactions
+- **extensible** — storage, safety, evaluation, and new tools can be added later
+- **operable** — logging, tracing, and metrics are already introduced
 
-Each layer has a clearly scoped responsibility:
-
-- API concerns stay in `api/`
-- business logic stays in `services/`
-- state and structured contracts stay in `domain/`
-- infrastructure details stay in `infra/`
-- orchestration stays in `workflow/`
-- shared runtime concerns stay in `core/`
-
-### 2. Workflow-first design
-
-The core user journey is not modeled as a loose collection of function calls.
-It is modeled as a **stateful graph**.
-
-This is essential for agent systems because it supports:
-
-- controlled transitions
-- branching logic
-- human-in-the-loop interruptions
-- resumable execution
-- future persistence and checkpointing
-
-### 3. Production-oriented modularity
-
-The codebase is organized so that the same business logic can be exposed through:
-
-- CLI
-- HTTP APIs
-- future worker processes
-- future UI clients
-
-### 4. Observable by design
-
-Production AI systems are difficult to operate without visibility.
-The architecture therefore introduces:
-
-- centralized logs
-- lightweight tracing spans
-- in-process metrics
-- HTTP request correlation
-
----
-
-## High-Level Architecture
+## High-level flow
 
 ```text
-Client / CLI / UI
-        |
-        v
-   FastAPI Layer
-        |
-        v
- Session Service / API Adapters
-        |
-        v
- LangGraph Workflow
-   |        |        |
-   v        v        v
-Validation  Quiz   Explanation
- Services  Services  Services
-        |
-        v
- LLM Provider + Tools
-        |
-        v
- OpenAI / Tavily
+Client / CLI
+    |
+    v
+FastAPI API
+    |
+    v
+SessionService
+    |
+    v
+LangGraph workflow
+    |
+    +--> Health validation
+    +--> Health explanation agent
+    +--> Optional web search tool
+    +--> Quiz approval interrupt
+    +--> Quiz generation
+    +--> Quiz answer interrupt
+    +--> Quiz grading + explanation
 ```
 
----
+## Layered architecture
 
-## Detailed Module Responsibilities
+### 1. API layer — `src/healthbot/api`
 
-## `src/healthbot/api/`
+Responsible for HTTP delivery.
 
-This layer exposes the application through HTTP.
-
-### Responsibilities
-
-- define REST endpoints
-- validate payloads with Pydantic schemas
-- wire dependencies
+**Responsibilities**
+- define endpoints
+- validate request and response payloads
+- inject shared services
 - install middleware
-- normalize exception handling
-- return stable API responses
+- expose health and metrics endpoints
+- map internal errors to stable API responses
 
-### Key files
+**Key files**
+- `app.py` — FastAPI app assembly
+- `dependencies.py` — singleton dependency wiring
+- `routes/chat.py` — session creation, chat, history
+- `routes/quiz.py` — quiz approval and answer submission
+- `routes/health.py` — liveness, readiness, metrics
+- `middleware/` — request logging and error handling
 
-#### `app.py`
-Builds the FastAPI application and connects:
+### 2. Core layer — `src/healthbot/core`
 
-- routes
-- middleware
-- exception handlers
-- CORS configuration
-- application metadata
+Provides shared runtime primitives.
 
-#### `dependencies.py`
-Provides reusable injected dependencies, such as the session service singleton.
+**Responsibilities**
+- settings management
+- centralized logging
+- application exceptions
 
-#### `routes/chat.py`
-Exposes endpoints to:
+**Key files**
+- `settings.py` — typed environment configuration
+- `logging.py` — logger setup
+- `exceptions.py` — explicit domain/application failures
 
-- create sessions
-- send a user question
-- retrieve session history
+### 3. Domain layer — `src/healthbot/domain`
 
-#### `routes/quiz.py`
-Exposes endpoints to:
+Defines state and structured contracts.
 
-- approve or reject quiz continuation
-- submit quiz answers
+**Responsibilities**
+- describe workflow state
+- define quiz and explanation schemas
+- provide stable internal contracts independent from transport
 
-#### `routes/health.py`
-Exposes operational endpoints:
+**Key files**
+- `models.py` — `WorkflowState`
+- `quiz_models.py` — structured quiz and explanation models
 
-- liveness
-- readiness
-- metrics snapshot
+### 4. Infrastructure layer — `src/healthbot/infra`
 
-#### `middleware/request_logging.py`
-Captures request-level telemetry:
+Encapsulates external dependencies.
 
-- request ID
-- method
-- path
-- status code
-- duration
+**Responsibilities**
+- initialize the LLM client
+- expose external tools
+- isolate third-party integrations from business logic
 
-#### `middleware/error_handler.py`
-Maps domain and application errors to structured HTTP responses.
+**Key files**
+- `llm_provider.py` — OpenAI model factory
+- `web_search_tool.py` — Tavily tool wrapper
 
----
+### 5. Service layer — `src/healthbot/services`
 
-## `src/healthbot/core/`
+Contains business logic used by the workflow and API.
 
-This layer contains global runtime building blocks shared across the entire application.
-
-### Responsibilities
-
-- configuration
-- logging
-- exception definitions
-- application-level constants
-
-### Key files
-
-#### `settings.py`
-Defines application settings using `pydantic-settings`.
-
-It centralizes configuration such as:
-
-- API host and port
-- environment name
-- model name
-- API keys
-- logging level
-- CORS origins
-- feature toggles
-
-#### `logging.py`
-Provides centralized logging configuration.
-
-This ensures every module uses a consistent logging format and output strategy.
-
-#### `exceptions.py`
-Defines explicit application exceptions.
-
-Examples include:
-
-- validation errors
-- quiz generation errors
-- LLM service failures
-- workflow errors
-- tool execution errors
-
-These custom exceptions help keep failure semantics clear and avoid silent runtime issues.
-
----
-
-## `src/healthbot/domain/`
-
-This is the domain contract layer.
-
-### Responsibilities
-
-- define shared state models
-- define structured quiz contracts
-- keep business-facing schemas independent from delivery or infra details
-
-### Key files
-
-#### `models.py`
-Contains core workflow state definitions.
-
-#### `quiz_models.py`
-Contains Pydantic models used for structured LLM outputs such as:
-
-- quiz questions
-- explanations
-
-This layer is intentionally lightweight and stable.
-
----
-
-## `src/healthbot/infra/`
-
-This layer contains technical integrations with external systems.
-
-### Responsibilities
-
-- instantiate the LLM client
-- define tool adapters
-- encapsulate external service interaction
-
-### Key files
-
-#### `llm_provider.py`
-Owns model initialization.
-
-Benefits:
-
-- central LLM configuration
-- easier mocking in tests
-- easier future migration between providers
-
-#### `web_search_tool.py`
-Wraps Tavily search as a tool usable by the workflow.
-
-This keeps web search logic out of business services and graph nodes.
-
----
-
-## `src/healthbot/services/`
-
-This is the business logic layer.
-
-It sits between orchestration and infrastructure.
-
-### Responsibilities
-
-- validate user questions
+**Responsibilities**
+- validate topic scope
 - generate quizzes
 - grade answers
-- generate explanations
-- manage session interactions for the API
+- generate educational explanations
+- manage session interactions with the workflow
 
-### Key files
+**Key files**
+- `health_validator.py`
+- `quiz_service.py`
+- `explanation_service.py`
+- `session_service.py`
 
-#### `health_validator.py`
-Determines whether a user request is health-related.
+`SessionService` is the main application façade. It hides graph invocation details and normalizes workflow output for API clients.
 
-It isolates classification logic from the workflow definition.
+### 6. Workflow layer — `src/healthbot/workflow`
 
-#### `quiz_service.py`
-Contains:
+Defines the orchestration logic.
 
-- quiz generation
-- quiz approval parsing
-- answer validation
-- answer grading
+**Responsibilities**
+- register graph nodes
+- declare transitions
+- implement routing rules
+- compile the LangGraph graph
 
-#### `explanation_service.py`
-Generates detailed educational feedback after grading.
+**Key files**
+- `nodes.py` — workflow node implementations
+- `router.py` — transition decisions
+- `workflow_builder.py` — graph construction and compilation
 
-#### `session_service.py`
-Acts as the application façade between the HTTP layer and the LangGraph workflow.
+### 7. Observability layer — `src/healthbot/observability`
 
-It manages:
+Adds runtime visibility.
 
-- session creation
-- session state lookup
-- workflow invocation
-- workflow resume commands
-- API-friendly response normalization
+**Responsibilities**
+- collect counters and timings
+- trace important operations
+- support debugging and basic monitoring
 
-This is a critical addition for production readiness because it removes graph handling from route handlers.
+**Key files**
+- `metrics.py`
+- `tracing.py`
 
----
+### 8. Repository layer — `src/healthbot/repositories`
 
-## `src/healthbot/workflow/`
+Currently minimal, but strategically important.
 
-This is the orchestration layer.
+**Role**
+- define persistence boundaries
+- prepare the codebase for Redis, Postgres, or LangGraph checkpoint backends
+- avoid coupling business logic to in-memory storage
 
-### Responsibilities
+### 9. Prompt layer — `src/healthbot/prompts`
 
-- define workflow nodes
-- define routing rules
-- define graph transitions
-- compile the LangGraph workflow
+This folder should become the **single source of truth for prompts**.
 
-### Key files
+**Target responsibilities**
+- store system prompts and task prompts by domain
+- version prompts explicitly
+- expose typed prompt builders
+- support testing and iterative prompt evaluation
 
-#### `nodes.py`
-Contains the state transition functions for the workflow.
+## Execution model
 
-Examples:
+The current workflow is resumable and stateful:
 
-- entry node
-- validation node
-- agent node
-- rejection node
-- quiz nodes
-- end node
+1. A client creates a `session_id`
+2. The client asks a health question
+3. The workflow validates the topic
+4. If valid, the agent generates an explanation
+5. The workflow interrupts to ask whether a quiz should be created
+6. If approved, the workflow generates one multiple-choice question
+7. The workflow interrupts again to collect the answer
+8. The answer is graded and explained
+9. The workflow returns a final educational response
 
-#### `router.py`
-Defines conditional routing logic between nodes.
+This design maps well to HTTP because interruptions are surfaced explicitly and can be resumed through dedicated API endpoints.
 
-#### `workflow_builder.py`
-Builds and compiles the LangGraph graph.
+## Current strengths
 
-This module is the orchestration backbone of the application.
+### Clear separation of concerns
+The project already separates API, orchestration, services, infrastructure, and observability in a disciplined way.
 
----
+### Good prototype for LangGraph
+Using a graph rather than a loose chain is the right choice for interrupt/resume quiz flows.
 
-## `src/healthbot/observability/`
+### Structured outputs for quiz artifacts
+The use of Pydantic models for quiz and explanation generation is a strong design choice.
 
-This layer provides runtime visibility.
+### Session façade for the API
+`SessionService` keeps route handlers thin and isolates workflow-specific handling.
 
-### Responsibilities
+## Important architectural limits
 
-- lightweight tracing
-- execution metrics
-- request correlation
+### In-memory state
+Session and graph state are process-local. This prevents horizontal scaling and causes state loss on restart.
 
-### Key files
+### Prompt logic is scattered
+Prompts are embedded directly inside services and nodes, which makes versioning, testing, and governance difficult.
 
-#### `tracing.py`
-Implements lightweight span tracking around important operations.
+### Safety and grounding are still lightweight
+For a health-related assistant, the current architecture does not yet enforce a strong safety layer, source attribution policy, or escalation rules.
 
-This helps identify slow or failing parts of the workflow.
-
-#### `metrics.py`
-Stores counters and timing summaries in process.
-
-This is intentionally simple but already useful for:
-
-- debugging
-- smoke monitoring
-- API inspection
-
-It can later evolve into Prometheus or OpenTelemetry exporters.
-
----
-
-## `src/healthbot/utils/`
-
-Helper utilities that do not belong directly to a business domain.
-
-### Responsibilities
-
-- interrupt payload handling
-- graph visualization support
-
-These helpers remain intentionally small and decoupled.
-
----
-
-## Workflow Execution Model
-
-The application follows this execution sequence:
-
-1. A client creates or reuses a `session_id`
-2. The client sends a health question
-3. The API passes the question to `SessionService`
-4. `SessionService` invokes the LangGraph workflow
-5. The workflow validates the topic
-6. If valid, the agent generates an educational response
-7. The workflow may interrupt to ask whether a quiz should be generated
-8. The client resumes the workflow with approval or rejection
-9. If approved, the workflow interrupts again to collect the quiz answer
-10. The client resumes the workflow with the answer
-11. The workflow grades the answer and returns feedback
-
-This design provides a clean mapping between:
-
-- graph interruptions
-- resumable user interactions
-- HTTP endpoints
-
----
-
-## Session Model
-
-The current implementation uses an in-memory session registry through `SessionService`.
-
-### What it supports
-
-- unique `session_id`
-- workflow resume by session
-- API-level session history
-
-### Why this matters
-
-Agent workflows are stateful. Without sessions, HTTP APIs tend to break the conversational state model.
-
-### Recommended future upgrade
-
-Replace in-memory state with:
-
-- Redis
-- Postgres
-- LangGraph persistent checkpoint storage
-
----
-
-## Error Handling Strategy
-
-The application uses layered error handling.
-
-### Service-level errors
-
-Service and infra modules raise explicit exceptions when an operation fails.
-
-### API-level normalization
-
-FastAPI middleware converts application exceptions into structured HTTP responses.
-
-### Benefits
-
-- less duplicated `try/except`
-- clearer debugging
-- safer external API behavior
-- better observability
-
----
-
-## Observability Strategy
-
-Observability is designed as a cross-cutting concern.
-
-### Logging
-
-Used for:
-
-- application startup
-- LLM initialization
-- validation decisions
-- quiz generation and grading
-- tool execution
-- HTTP request lifecycle
-
-### Tracing
-
-Used for:
-
-- node-level timing
-- service execution spans
-- workflow operation timing
-
-### Metrics
-
-Used for:
-
-- request counts
-- validation counts
-- quiz generation counts
-- quiz grading counts
-- failure counts
-- timing aggregation
-
-This combination is enough for early production environments and can be extended later.
-
----
-
-## Design Decisions
-
-### Why LangGraph
-
-LangGraph is used because the system is naturally stateful and branching.
-
-It provides:
-
-- explicit transitions
-- interrupt/resume behavior
-- better agent control than ad-hoc chaining
-
-### Why services separate from workflow
-
-The workflow should orchestrate steps, not implement all business logic inline.
-
-Keeping logic in services improves:
-
-- readability
-- testability
-- reusability
-- maintainability
-
-### Why FastAPI
-
-FastAPI is a strong fit for AI services because it offers:
-
-- async-ready architecture
-- Pydantic integration
-- automatic OpenAPI docs
-- easy integration with modern backends
-
-### Why lightweight observability first
-
-A minimal but connected observability layer is often better than overengineering early with full telemetry stacks.
-
-This project is ready to evolve toward OpenTelemetry, Prometheus, and LangSmith without major refactoring.
-
----
-
-## Current Production-Ready Capabilities
-
-Already covered:
-
-- modular codebase
-- API exposure
-- typed request and response models
-- centralized config
-- centralized logging
-- exception normalization
-- session-aware workflow adapter
-- tracing and metrics hooks
-- test-ready layering
-
----
-
-## Recommended Next Steps
-
-### Short term
-
-- add API route tests with `TestClient`
-- add authentication
-- add rate limiting
-- add persistent session storage
-- add Docker and Compose
-
-### Medium term
-
-- add streaming responses
-- add Redis-backed caching
-- add LangSmith integration
-- add OpenTelemetry exporters
-- add background task support
-
-### Long term
-
-- add RAG with medical knowledge sources
-- add vector storage
-- add multi-agent routing
-- add policy and safety guardrails
-- add model fallback strategies
-
----
+### Observability is local only
+The current metrics/tracing approach is useful for development but not enough for production monitoring.
+
+### Delivery and domain are still somewhat coupled
+Some workflow decisions and user-facing content formatting remain inside node implementations rather than dedicated response/presentation helpers.
+
+## Serious improvement tracks
+
+### 1. Add persistent session and checkpoint storage
+Replace in-memory state with a real backend.
+
+**Recommended options**
+- Redis for active session state
+- Postgres for durable conversation history
+- LangGraph checkpoint persistence for resumable workflows
+
+**Why it matters**
+- survives restarts
+- supports multiple API instances
+- enables auditability and replay
+
+### 2. Centralize prompt management
+Move all prompts to `src/healthbot/prompts` with explicit builders and versioning.
+
+**Why it matters**
+- safer prompt changes
+- easier A/B testing
+- cleaner service code
+- reproducible evaluations
+
+### 3. Introduce a dedicated medical safety layer
+Add a pre-response and post-response safety policy.
+
+**Examples**
+- emergency symptom detection and escalation
+- scope restriction for diagnosis/treatment claims
+- medication and dosage caution rules
+- mandatory “educational, not medical advice” framing where appropriate
+
+### 4. Ground answers more reliably
+Strengthen source usage when the agent searches the web.
+
+**Recommended changes**
+- normalize search results into a source model
+- rank and filter domains
+- require citations in final answers when external search is used
+- separate “retrieval evidence” from “final answer rendering”
+
+### 5. Make observability production-ready
+Move from local helpers to standard telemetry.
+
+**Recommended changes**
+- OpenTelemetry traces
+- Prometheus-compatible metrics
+- request and session correlation IDs
+- LLM latency, token, tool, and error dashboards
+
+### 6. Harden reliability around LLM/tool execution
+Add defensive controls around model and tool calls.
+
+**Recommended changes**
+- explicit timeouts
+- retries with backoff
+- fallback behavior when Tavily or OpenAI fails
+- better error taxonomy and user-safe messages
+
+### 7. Improve testing strategy
+Strengthen both code quality and behavior validation.
+
+**Recommended tests**
+- prompt snapshot tests
+- workflow interrupt/resume integration tests
+- contract tests for API schemas
+- failure-path tests for tools and providers
+- evaluation datasets for answer quality and safety
+
+### 8. Separate formatting from reasoning
+Keep workflow state updates focused on decisions and data, not presentation.
+
+**Target direction**
+- node returns structured data
+- presenter/formatter builds user-facing text
+- API can later support multiple clients and locales more easily
+
+## Recommended prompt management design
+
+A rigorous prompt architecture for this project could be:
+
+```text
+src/healthbot/prompts/
+├── __init__.py
+├── base.py
+├── registry.py
+├── versions.py
+├── health_validator.py
+├── health_agent.py
+├── quiz_generation.py
+├── quiz_explanation.py
+├── safety.py
+└── templates/
+    ├── health_agent_v1.md
+    ├── health_validator_v1.md
+    ├── quiz_generation_v1.md
+    └── quiz_explanation_v1.md
+```
+
+### Recommended implementation pattern
+
+**`base.py`**
+- defines a small typed prompt object, for example `PromptSpec`
+- stores `name`, `version`, `system_template`, `input_variables`
+
+**`registry.py`**
+- central registry to fetch prompts by logical name
+- example: `get_prompt("quiz_generation")`
+
+**domain prompt modules**
+- expose strongly typed builders such as:
+  - `build_health_validator_prompt(question: str)`
+  - `build_quiz_generation_prompt(summary: str)`
+  - `build_quiz_explanation_prompt(...)`
+
+**`templates/`**
+- keeps long prompt text out of business code
+- enables review by product, safety, and domain experts
+
+### Example design rule
+
+Services should never contain inline multi-line prompt strings.
+They should only do this:
+
+```python
+from src.healthbot.prompts.quiz_generation import build_quiz_generation_prompt
+
+messages = build_quiz_generation_prompt(summary)
+quiz = llm_structured.invoke(messages)
+```
+
+### Additional prompt governance recommendations
+
+- version every prompt explicitly
+- log prompt name and version during execution
+- add snapshot tests for prompts
+- maintain a small evaluation dataset for regressions
+- separate system instructions from dynamic user context
+- isolate safety overlays from task prompts
+
+## Proposed target architecture
+
+```text
+Client / API / CLI
+       |
+       v
+Application services
+       |
+       v
+Workflow orchestration
+       |
+       +--> domain services
+       +--> prompt registry
+       +--> safety policy layer
+       +--> retrieval/tool adapters
+       +--> persistence repositories
+       |
+       v
+External systems (OpenAI, Tavily, Redis, Postgres, telemetry)
+```
 
 ## Conclusion
 
-MedLearn Agent is now structured as a real AI application rather than a single-script prototype.
+MedLearn Agent already has a sound structure for a serious AI backend prototype.
+The most important next steps are not cosmetic; they are architectural:
 
-Its current architecture supports:
+1. persistent state and checkpoints
+2. centralized prompt management
+3. medical safety and grounding
+4. stronger observability and reliability
+5. evaluation-driven development
 
-- maintainable development
-- API-based delivery
-- workflow-driven agent execution
-- incremental production hardening
-
-This makes it a strong foundation for a serious AI health education platform.
+Those changes would move the project from a clean prototype toward a deployable and governable AI service.
