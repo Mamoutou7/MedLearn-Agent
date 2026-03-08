@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from src.healthbot.domain.quiz_models import QuizQuestion
 from src.healthbot.infra.llm_provider import LLMProvider
-
+from src.healthbot.prompts.quiz_generation import build_quiz_generation_messages
 from src.healthbot.core.logging import get_logger
 from src.healthbot.core.exceptions import QuizGradingError, QuizGenerationError
 from src.healthbot.observability.metrics import metrics
@@ -34,41 +34,9 @@ class QuizService:
             with trace_span("quiz.generate"):
                 metrics.increment("quiz.generate.calls")
                 llm_structured = self.llm.with_structured_output(QuizQuestion)
-                prompt = ChatPromptTemplate.from_messages(
-                    [
-                        (
-                            "system",
-                            """                    
-                    Generate ONE multiple-choice question based on the provided
-                    health information.
-                    
-                    Rules:
-                    - The question must test understanding of the health topic.
-                    - Provide exactly 4 answer choices: A, B, C, D.
-                    - Only ONE answer must be correct.
-                    - Use simple, patient-friendly language.
-                    - All options should be plausible but clearly different.
-                    
-                    Examples:
-                    
-                    Health Information:
-                    "Diabetes is a condition where blood sugar levels are too high."
-                    
-                    Quiz:
-                    Question: What is the main problem in diabetes?
-                    A: Low blood pressure
-                    B: High blood sugar
-                    C: Weak muscles
-                    D: Poor vision
-                    Correct Answer: B
-                    
-                    Generate a similar quiz question based on the user's health summary.
-                    """,
-                        ),
-                        ("user", "{summary}"),
-                    ]
+                quiz = llm_structured.invoke(
+                    build_quiz_generation_messages(summary)
                 )
-                quiz = llm_structured.invoke(prompt.format_messages(summary=summary))
                 logger.info("Quiz generated successfully")
                 return quiz.model_dump()
 
@@ -143,7 +111,9 @@ class QuizGradingService:
                 score = 100 if is_correct else 0
 
                 logger.info(
-                    f"Quiz graded | user_answer={user_answer} | correct={is_correct}"
+                    "Quiz graded | user_answer=%s | correct=%s",
+                    user_answer,
+                    is_correct,
                 )
                 return {
                     "is_correct": is_correct,
