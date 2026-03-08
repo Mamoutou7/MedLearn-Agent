@@ -13,6 +13,7 @@ from typing import Literal
 from langchain_core.messages import AIMessage
 from langgraph.graph.message import MessagesState
 
+# GLOBAL VARIABLES
 Route = Literal["health_agent", "tools", "quiz_approval"]
 ValidationRoute = Literal["continue", "reject"]
 
@@ -54,7 +55,6 @@ class WorkflowRouter:
         return "continue" if state.get("health_topic") else "reject"
 
     # ---------- Private helpers ----------
-
     def _has_tool_calls(self, message) -> bool:
         """Check if the LLM requested tool execution."""
         return hasattr(message, "tool_calls") and bool(message.tool_calls)

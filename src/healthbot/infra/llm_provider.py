@@ -1,5 +1,14 @@
+from __future__ import annotations
+
 from langchain_openai import ChatOpenAI
+
+from src.healthbot.core.exceptions import LLMServiceError
+from src.healthbot.core.logging import get_logger
 from src.healthbot.core.settings import settings
+from src.healthbot.observability.metrics import metrics
+
+logger = get_logger(__name__)
+
 
 class LLMProvider:
     """
@@ -18,10 +27,17 @@ class LLMProvider:
         ChatOpenAI
         """
         if self._llm is None:
-            self._llm = ChatOpenAI(
-                model=settings.model_name,
-                temperature=0,
-                api_key=settings.openai_api_key
-            )
+            try:
+                logger.info("Initializing LLM model=%s", settings.model_name)
+                self._llm = ChatOpenAI(
+                    model=settings.model_name,
+                    temperature=0,
+                    api_key=settings.openai_api_key,
+                )
+                metrics.increment("llm.provider.initialized")
+
+            except Exception as exc:
+                logger.exception("Failed to initialize ChatOpenAI")
+                raise LLMServiceError("Could not initialize LLM provider") from exc
 
         return self._llm

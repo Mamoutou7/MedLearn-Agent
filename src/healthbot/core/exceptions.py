@@ -32,34 +32,45 @@ class ConfigurationError(HealthBotError):
     """
     Raised when application configuration is invalid or incomplete.
     """
+
     pass
+
 
 class ValidationError(HealthBotError):
     """
     Raised when a user request fails domain validation.
     """
+
     pass
+
 
 class LLMServiceError(HealthBotError):
     """
     Raised when interaction with the LLM fails.
     """
+
     pass
+
 
 class ToolExecutionError(HealthBotError):
     """
     Raised when an external tool fails (web search, API calls, etc.).
     """
+
     pass
+
 
 class WorkflowError(HealthBotError):
     """
     Raised when the LangGraph workflow encounters an invalid state.
     """
+
     pass
+
 
 class QuizGenerationError(HealthBotError):
     pass
+
 
 class QuizGradingError(HealthBotError):
     pass

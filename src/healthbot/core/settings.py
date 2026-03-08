@@ -1,58 +1,62 @@
 """
 Application configuration module.
 
-Handles environment variable loading and validation.
+Centralizes environment loading for CLI, API and infrastructure.
 """
 
 from __future__ import annotations
 
-import os
-from dataclasses import dataclass
+from functools import lru_cache
+from typing import List
+
 from dotenv import load_dotenv
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+load_dotenv()
 
 
-@dataclass(frozen=True)
-class Settings:
-    """
-    Immutable application settings.
+class Settings(BaseSettings):
+    """Typed application settings loaded from environment variables."""
 
-    Attributes
-    ----------
-    openai_api_key : str
-        API key used for OpenAI services.
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
-    tavily_api_key : str
-        API key used for Tavily search.
-    """
+    openai_api_key: str = Field(..., alias="OPENAI_API_KEY")
+    tavily_api_key: str = Field(..., alias="TAVILY_API_KEY")
+    model_name: str = Field(default="gpt-4o-mini", alias="MODEL_NAME")
 
-    openai_api_key: str
-    tavily_api_key: str
-    model_name: str
+    app_name: str = Field(default="MedLearn Agent", alias="APP_NAME")
+    app_env: str = Field(default="development", alias="APP_ENV")
+    debug: bool = Field(default=False, alias="DEBUG")
+    api_host: str = Field(default="0.0.0.0", alias="API_HOST")
+    api_port: int = Field(default=8000, alias="API_PORT")
+    api_key: str | None = Field(default=None, alias="API_KEY")
 
-    @classmethod
-    def load(cls) -> "Settings":
-        """
-        Load settings from environment variables.
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    log_file: str = Field(default="logs/healthbot.log", alias="LOG_FILE")
 
-        Returns
-        -------
-        Settings
-        """
-        load_dotenv()
+    enable_metrics: bool = Field(default=True, alias="ENABLE_METRICS")
+    enable_tracing: bool = Field(default=True, alias="ENABLE_TRACING")
+    default_thread_prefix: str = Field(default="session", alias="DEFAULT_THREAD_PREFIX")
+    allowed_origins_raw: str = Field(default="*", alias="ALLOWED_ORIGINS")
 
-        openai = os.getenv("OPENAI_API_KEY")
-        tavily = os.getenv("TAVILY_API_KEY")
-        model = os.getenv("MODEL_NAME")
-
-        if not openai:
-            raise EnvironmentError("OPENAI_API_KEY missing")
-
-        if not tavily:
-            raise EnvironmentError("TAVILY_API_KEY missing")
-        if not model:
-            raise EnvironmentError("MODEL_NAME missing")
-
-        return cls(openai_api_key=openai, tavily_api_key=tavily, model_name=model)
+    @property
+    def allowed_origins(self) -> List[str]:
+        """Return CORS origins as a parsed list."""
+        raw = self.allowed_origins_raw.strip()
+        if raw == "*":
+            return ["*"]
+        return [item.strip() for item in raw.split(",") if item.strip()]
 
 
-settings = Settings.load()
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """Return a cached settings instance."""
+    return Settings()
+
+
+settings = get_settings()

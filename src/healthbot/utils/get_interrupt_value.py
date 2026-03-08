@@ -16,7 +16,7 @@ def get_interrupt_value(interrupt_data, key, default="Not available"):
             interrupt_obj = interrupt_data[0]  # Get the first Interrupt object
 
             # Check if the object has a 'value' attribute
-            if hasattr(interrupt_obj, 'value'):
+            if hasattr(interrupt_obj, "value"):
                 data = interrupt_obj.value
                 # Return the value for the key, or default if key doesn't exist
                 return data.get(key, default)

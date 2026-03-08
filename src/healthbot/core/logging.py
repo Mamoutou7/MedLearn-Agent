@@ -1,63 +1,50 @@
-"""
-Centralized logging configuration for HealthBot.
+"""Centralized logging configuration for HealthBot."""
 
-Provides structured logging and reusable logger instances
-across the application.
-
-Logs are written only to a rotating file.
-"""
+from __future__ import annotations
 
 import logging
-from typing import Optional
-from pathlib import Path
+import sys
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Optional
+
+from src.healthbot.core.settings import settings
+
+DEFAULT_LOG_FORMAT = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 
 
-DEFAULT_LOG_FORMAT = (
-    "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-)
-
-
-def configure_logging(level: int = logging.INFO) -> None:
-    """
-    Configure global logging behavior.
-
-    Logs are written only to logs/healthbot.log
-    """
-
+def configure_logging(level: int | None = None) -> None:
+    """Configure root logging once for file and stdout handlers."""
     root_logger = logging.getLogger()
-
-    # Prevent reconfiguration
-    if root_logger.handlers:
+    if getattr(configure_logging, "_configured", False):
         return
 
-    # Ensure logs directory exists
-    log_dir = Path("logs")
-    log_dir.mkdir(exist_ok=True)
-
-    log_file = log_dir / "healthbot.log"
+    resolved_level = level or getattr(logging, settings.log_level.upper(), logging.INFO)
+    log_file = Path(settings.log_file)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
 
     formatter = logging.Formatter(DEFAULT_LOG_FORMAT)
 
     file_handler = RotatingFileHandler(
         log_file,
-        maxBytes=5_000_000,  # 5 MB
-        backupCount=3
+        maxBytes=5_000_000,
+        backupCount=3,
+        encoding="utf-8",
     )
-
-    file_handler.setLevel(level)
+    file_handler.setLevel(resolved_level)
     file_handler.setFormatter(formatter)
 
-    root_logger.setLevel(level)
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setLevel(resolved_level)
+    stream_handler.setFormatter(formatter)
+
+    root_logger.setLevel(resolved_level)
     root_logger.addHandler(file_handler)
+    root_logger.addHandler(stream_handler)
+
+    configure_logging._configured = True
 
 
 def get_logger(name: Optional[str] = None) -> logging.Logger:
-    """
-    Return a configured logger instance.
-    """
-
-    logger = logging.getLogger(name)
-    logger.propagate = True
-
-    return logger
+    """Return a logger configured via ``configure_logging``."""
+    return logging.getLogger(name)

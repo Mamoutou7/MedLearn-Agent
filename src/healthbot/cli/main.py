@@ -4,6 +4,7 @@ from src.healthbot.workflow.workflow_builder import WorkflowBuilder
 from src.healthbot.utils.get_interrupt_value import get_interrupt_value
 
 import warnings
+
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
@@ -31,9 +32,11 @@ def run_session(graph, question, thread_id):
 
     print(summary)
 
-    decision = input(
-        "\nWould you like to test your knowledge with a quiz? (approve/reject): "
-    ).strip().lower()
+    decision = (
+        input("\nWould you like to test your knowledge with a quiz? (approve/reject): ")
+        .strip()
+        .lower()
+    )
 
     if decision not in ["approve", "yes", "y"]:
 
@@ -70,6 +73,7 @@ def run_session(graph, question, thread_id):
     messages[-1].pretty_print()
 
     print("\nSession completed.")
+
 
 def human_in_the_loop():
     """

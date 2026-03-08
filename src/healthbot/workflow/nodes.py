@@ -21,7 +21,6 @@ from src.healthbot.services.quiz_service import QuizService, QuizGradingService
 from src.healthbot.services.explanation_service import ExplanationService
 from src.healthbot.services.quiz_service import QuizApprovalService
 
-
 logger = get_logger(__name__)
 
 
@@ -121,10 +120,7 @@ class HealthWorkflowNodes:
         except Exception as exc:
             logger.exception("LLM execution failed")
 
-            raise LLMServiceError(
-                "Agent execution failed"
-            ) from exc
-
+            raise LLMServiceError("Agent execution failed") from exc
 
     # REJECTION NODE
     def rejection_node(self, state: WorkflowState):
@@ -161,7 +157,7 @@ class HealthWorkflowNodes:
         }
 
     # QUIZ GENERATION
-    def quiz_generation_node(self, state: WorkflowState) :
+    def quiz_generation_node(self, state: WorkflowState):
         """
         LangGraph node responsible for generating a quiz question
         based on the health summary produced by the agent.
@@ -209,9 +205,7 @@ class HealthWorkflowNodes:
         try:
             quiz = self.quiz_service.generate_quiz(summary)
 
-            quiz_text = f"""
-                QUIZ
-        
+            quiz_text = f"""        
                 {quiz['question']}
         
                 A) {quiz['option_a']}
@@ -233,27 +227,28 @@ class HealthWorkflowNodes:
 
         except Exception as exc:
             logger.exception("Quiz generation failed")
-
             raise LLMServiceError(
                 "Quiz generation failed",
                 context={"summary": summary[:200]},
             ) from exc
 
-    def quiz_approval_node(self, state: WorkflowState) -> Command[Literal["quiz_generation", "end_workflow"]]:
+    def quiz_approval_node(
+        self, state: WorkflowState
+    ) -> Command[Literal["quiz_generation", "end_workflow"]]:
         """
-            Node asking the user if they want a quiz.
+        Node asking the user if they want a quiz.
 
-            This node interrupts the workflow and waits for
-            user input before continuing.
+        This node interrupts the workflow and waits for
+        user input before continuing.
 
-            Parameters
-            ----------
-            state : WorkflowState
+        Parameters
+        ----------
+        state : WorkflowState
 
-            Returns
-            -------
-            Command
-            """
+        Returns
+        -------
+        Command
+        """
 
         logger.info("Requesting quiz approval")
 
@@ -277,13 +272,12 @@ class HealthWorkflowNodes:
                 goto="quiz_generation",
                 update={"quiz_approved": True},
             )
-
         logger.info("Quiz rejected by user")
-
         return Command(goto="end_workflow")
 
-
-    def quiz_answer_node(self, state: WorkflowState) -> Command[Literal["quiz_grader", "end_workflow"]]:
+    def quiz_answer_node(
+        self, state: WorkflowState
+    ) -> Command[Literal["quiz_grader", "end_workflow"]]:
         """
         Node responsible for collecting the user's quiz answer.
 
@@ -301,40 +295,32 @@ class HealthWorkflowNodes:
 
         logger.info("Waiting for user quiz answer")
 
-        answer = interrupt(
-            {
-                "quiz_question": state["quiz_question"]
-            }
-        )
+        answer = interrupt({"quiz_question": state["quiz_question"]})
 
         answer = str(answer).upper().strip()
 
         if not self.grading_service.validate_answer(answer):
             logger.warning("Invalid quiz answer received")
 
-            return Command(
-                goto="end_workflow"
-            )
-
+            return Command(goto="end_workflow")
         return Command(
             goto="quiz_grader",
             update={"user_quiz_answer": answer},
         )
 
-
     def quiz_grader_node(self, state: WorkflowState):
         """
-            Node responsible for grading the quiz and generating
-            a detailed explanation.
+        Node responsible for grading the quiz and generating
+        a detailed explanation.
 
-            Parameters
-            ----------
-            state : WorkflowState
+        Parameters
+        ----------
+        state : WorkflowState
 
-            Returns
-            -------
-            dict
-            """
+        Returns
+        -------
+        dict
+        """
         logger.info("Grading quiz answer")
 
         user_answer = state.get("user_quiz_answer")
@@ -364,30 +350,22 @@ class HealthWorkflowNodes:
         )
 
         if is_correct:
-
             header = f"""
                 🎉 Correct!
-        
                 Your answer {user_answer} is correct.
-        
                 Score: {score}%
             """
 
         else:
-
             header = f"""
                 📚 Learning opportunity
-        
                 Your answer {user_answer} is incorrect.
-        
                 Correct answer: {correct_answer}
-        
                 Score: {score}%
             """
 
         feedback = f"""
             {header}
-    
             Explanation:
             {explanation["explanation"]}
     
@@ -410,8 +388,4 @@ class HealthWorkflowNodes:
 
     # END WORKFLOW
     def end_workflow_node(self, state: WorkflowState):
-        return {
-            "messages": [AIMessage(
-                content="Thanks for using HealthBot!"
-            )]
-        }
+        return {"messages": [AIMessage(content="Thanks for using HealthBot!")]}

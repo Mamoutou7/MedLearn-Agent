@@ -23,7 +23,8 @@ from src.healthbot.domain.quiz_models import QuizExplanation
 from src.healthbot.infra.llm_provider import LLMProvider
 from src.healthbot.core.logging import get_logger
 from src.healthbot.core.exceptions import LLMServiceError
-
+from src.healthbot.observability.metrics import metrics
+from src.healthbot.observability.tracing import trace_span
 
 logger = get_logger(__name__)
 
@@ -90,61 +91,51 @@ class ExplanationService:
         logger.info("Generating quiz explanation")
 
         try:
+            with trace_span("quiz.explanation"):
+                metrics.increment("quiz.explanation.calls")
+                llm_structured = self.llm.with_structured_output(QuizExplanation)
+                prompt = ChatPromptTemplate.from_messages(
+                    [
+                        (
+                            "system",
+                            """You are a medical educator helping patients understand quiz results.
+    
+                        Provide:
+                        1. Clear explanation of the correct answer
+                        2. Important health concepts
+                        3. Supporting references from the summary
+                        4. Tips to help remember the concept
+                        
+                        Use simple patient-friendly language.
+                    """,
+                        ),
+                        (
+                            "user",
+                            """Create a detailed explanation for this quiz question.
+                        Question: {quiz_question}
+                        User Answer: {user_answer}
+                        Correct Answer: {correct_answer}
+                        Was Correct: {is_correct}
+                        Health Summary: {summary}
+                        """,
+                        ),
+                    ]
+                )
 
-            llm_structured = self.llm.with_structured_output(QuizExplanation)
-
-            prompt = ChatPromptTemplate.from_messages(
-                [(
-                "system",
-                """You are a medical educator helping patients understand quiz results.
-
-                    Provide:
-                    1. Clear explanation of the correct answer
-                    2. Important health concepts
-                    3. Supporting references from the summary
-                    4. Tips to help remember the concept
-                    
-                    Use simple patient-friendly language.
-                """,
-                 ),
-                (
-                "user",
-                """Create a detailed explanation for this quiz question.
-                Question:
-                {quiz_question}
-                
-                User Answer:
-                {user_answer}
-                
-                Correct Answer:
-                {correct_answer}
-                
-                Was Correct:
-                {is_correct}
-                
-                Health Summary:
-                {summary}
-                """,
-                ),
-            ])
-
-            formatted_messages = prompt.format_messages(
-                quiz_question=quiz_question,
-                user_answer=user_answer,
-                correct_answer=correct_answer,
-                is_correct=is_correct,
-                summary=summary,
-            )
-
-            explanation = llm_structured.invoke(formatted_messages)
-
-            logger.info("Quiz explanation generated successfully")
-
-            return explanation.model_dump()
+                formatted_messages = prompt.format_messages(
+                    quiz_question=quiz_question,
+                    user_answer=user_answer,
+                    correct_answer=correct_answer,
+                    is_correct=is_correct,
+                    summary=summary,
+                )
+                explanation = llm_structured.invoke(formatted_messages)
+                logger.info("Quiz explanation generated successfully")
+                return explanation.model_dump()
 
         except Exception as exc:
             logger.exception("Failed to generate explanation")
-
+            metrics.increment("quiz.explanation.errors")
             raise LLMServiceError(
                 "Explanation generation failed",
                 context={

@@ -24,8 +24,8 @@ from src.healthbot.workflow.router import WorkflowRouter
 
 from src.healthbot.core.logging import get_logger
 
-
 logger = get_logger(__name__)
+
 
 class WorkflowBuilder:
     """
@@ -41,7 +41,6 @@ class WorkflowBuilder:
         self.memory = MemorySaver()
         self.nodes = HealthWorkflowNodes(LLMProvider())
         self.router = WorkflowRouter()
-
 
     def build(self):
         """
@@ -59,21 +58,13 @@ class WorkflowBuilder:
 
         # Register Nodes
         workflow.add_node("entry_point", self.nodes.entry_point)
-
         workflow.add_node("health_validation", self.nodes.health_validation_node)
-
         workflow.add_node("health_agent", self.nodes.health_agent)
-
         workflow.add_node("tools", ToolNode([web_search_tool]))
-
         workflow.add_node("rejection", self.nodes.rejection_node)
-
         workflow.add_node("quiz_approval", self.nodes.quiz_approval_node)
-
         workflow.add_node("quiz_generation", self.nodes.quiz_generation_node)
-
         workflow.add_node("quiz_answer_collection", self.nodes.quiz_answer_node)
-
         workflow.add_node("quiz_grader", self.nodes.quiz_grader_node)
 
         # Entry Point
@@ -104,15 +95,11 @@ class WorkflowBuilder:
         )
 
         workflow.add_edge("tools", "health_agent")
-
         # Quiz Workflow
         workflow.add_edge("quiz_generation", "quiz_answer_collection")
-
         workflow.add_edge("quiz_grader", "end_workflow")
-
         # Rejection Flow
         workflow.add_edge("rejection", "end_workflow")
-
         # End Workflow Node
         workflow.add_node("end_workflow", self.nodes.end_workflow_node)
         workflow.add_edge("end_workflow", END)
