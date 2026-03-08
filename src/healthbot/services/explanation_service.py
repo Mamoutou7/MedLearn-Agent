@@ -21,6 +21,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from src.healthbot.domain.quiz_models import QuizExplanation
 from src.healthbot.infra.llm_provider import LLMProvider
+from src.healthbot.prompts.quiz_explanation import build_quiz_explanation_messages
 from src.healthbot.core.logging import get_logger
 from src.healthbot.core.exceptions import LLMServiceError
 from src.healthbot.observability.metrics import metrics
@@ -94,41 +95,15 @@ class ExplanationService:
             with trace_span("quiz.explanation"):
                 metrics.increment("quiz.explanation.calls")
                 llm_structured = self.llm.with_structured_output(QuizExplanation)
-                prompt = ChatPromptTemplate.from_messages(
-                    [
-                        (
-                            "system",
-                            """You are a medical educator helping patients understand quiz results.
-    
-                        Provide:
-                        1. Clear explanation of the correct answer
-                        2. Important health concepts
-                        3. Supporting references from the summary
-                        4. Tips to help remember the concept
-                        
-                        Use simple patient-friendly language.
-                    """,
-                        ),
-                        (
-                            "user",
-                            """Create a detailed explanation for this quiz question.
-                        Question: {quiz_question}
-                        User Answer: {user_answer}
-                        Correct Answer: {correct_answer}
-                        Was Correct: {is_correct}
-                        Health Summary: {summary}
-                        """,
-                        ),
-                    ]
-                )
 
-                formatted_messages = prompt.format_messages(
+                formatted_messages = build_quiz_explanation_messages(
                     quiz_question=quiz_question,
                     user_answer=user_answer,
                     correct_answer=correct_answer,
                     is_correct=is_correct,
                     summary=summary,
                 )
+
                 explanation = llm_structured.invoke(formatted_messages)
                 logger.info("Quiz explanation generated successfully")
                 return explanation.model_dump()
