@@ -1,11 +1,16 @@
-"""
-Service responsible for generating quiz questions.
-"""
+from __future__ import annotations
+
+from typing import Dict
 
 from langchain_core.prompts import ChatPromptTemplate
+
 from src.healthbot.domain.quiz_models import QuizQuestion
 from src.healthbot.infra.llm_provider import LLMProvider
 
+from src.healthbot.core.logging import get_logger
+from src.healthbot.core.exceptions import QuizGenerationError, QuizGradingError
+
+logger = get_logger(__name__)
 
 class QuizService:
     """
@@ -78,16 +83,85 @@ class QuizService:
         return quiz.model_dump()
 
 
-if __name__ == "__main__":
-    quiz_service = QuizService(LLMProvider())
-
-    summary = """
-    HIV is a virus that attacks the immune system.
-    If untreated, it can lead to AIDS. Treatment with antiretroviral
-    medication allows people with HIV to live long and healthy lives.
+class QuizApprovalService:
+    """
+    Service responsible for handling quiz approval logic.
     """
 
-    result = quiz_service.generate_quiz(summary)
+    def approve(self, decision: str) -> bool:
+        """
+        Determine whether the user approved the quiz.
 
-    print("\nGenerated Quiz:\n")
-    print(result)
+        Parameters
+        ----------
+        decision : str
+            User decision (approve / reject)
+
+        Returns
+        -------
+        bool
+        """
+
+        decision = decision.lower().strip()
+
+        return decision == "approve"
+
+
+class QuizGradingService:
+    """
+    Service responsible for grading quiz answers.
+    """
+
+    VALID_ANSWERS = {"A", "B", "C", "D"}
+
+    def validate_answer(self, answer: str) -> bool:
+        """
+        Validate user answer format.
+
+        Returns
+        -------
+        bool
+        """
+        logger.debug(f"Validating answer: {answer}")
+
+        return answer.upper() in self.VALID_ANSWERS
+
+    def grade(self, user_answer: str, correct_answer: str) -> Dict:
+        """
+        Grade the quiz answer.
+
+        Returns
+        -------
+        Dict
+        """
+        try:
+            user_answer = user_answer.upper().strip()
+            correct_answer = correct_answer.upper().strip()
+
+            if user_answer not in self.VALID_ANSWERS:
+                logger.warning("Invalid quiz answer format")
+
+                raise QuizGradingError(
+                    "Invalid quiz answer. Must be A, B, C or D."
+                )
+
+            is_correct = user_answer == correct_answer
+            score = 100 if is_correct else 0
+
+            logger.info(
+                f"Quiz graded | user_answer={user_answer} | correct={is_correct}"
+            )
+
+            return {
+                "is_correct": is_correct,
+                "score": score,
+            }
+        except Exception as e:
+            logger.error(
+                "Quiz grading failed",
+                exc_info=True
+            )
+
+            raise QuizGradingError(
+                "Quiz grading failed"
+            ) from e
