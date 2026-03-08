@@ -8,7 +8,7 @@ from tavily import TavilyClient
 from src.healthbot.core.settings import settings
 
 @tool
-def med_web_search(question: str) -> Dict:
+def web_search_tool(question: str) -> Dict:
     """
     Perform a web search for medical information.
 

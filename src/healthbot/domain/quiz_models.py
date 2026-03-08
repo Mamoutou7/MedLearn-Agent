@@ -1,5 +1,5 @@
 """
-Pydantic models used for structured LLM outputs.
+Pydantic domain used for structured LLM outputs.
 """
 
 from pydantic import BaseModel

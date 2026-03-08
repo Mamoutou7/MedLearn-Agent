@@ -1,5 +1,5 @@
 from langchain_openai import ChatOpenAI
-from src.healthbot.config.settings import settings
+from src.healthbot.core.settings import settings
 
 class LLMProvider:
     """

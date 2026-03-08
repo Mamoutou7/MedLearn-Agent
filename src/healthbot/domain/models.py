@@ -3,7 +3,7 @@ from langgraph.graph.message import MessagesState
 # Models representing workflow state.
 class WorkflowState(MessagesState):
     """
-    State object passed between LangGraph nodes.
+    State object passed between LangGraph workflow.
 
     This state contains all data required for the
     health education workflow.
