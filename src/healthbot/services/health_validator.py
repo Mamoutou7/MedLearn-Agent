@@ -9,9 +9,9 @@ from langchain_core.messages import AIMessage
 
 from src.healthbot.infra.llm_provider import LLMProvider
 from src.healthbot.core.logging import get_logger
-from src.healthbot.core.exceptions import ValidationError
 from src.healthbot.observability.metrics import metrics
 from src.healthbot.observability.tracing import trace_span
+from src.healthbot.prompts.health_validator import build_health_validator_messages
 
 logger = get_logger(__name__)
 
@@ -30,36 +30,13 @@ class HealthValidator:
         Validate a user question.
         """
         logger.info("Validating user question")
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    """You are a health topic classifier.
-
-                Determine if a question is related to health, medicine, diseases,
-                symptoms, treatments, hospitals, doctors, or wellness.
-        
-                Rules:
-                - Reply ONLY with YES or NO
-                - YES → medical or health topic
-                - NO → anything else
-        
-                Examples:
-                What is diabetes? → YES
-                What causes HIV? → YES
-                What is a healthy diet? → YES
-                What is the capital of France? → NO
-                How to install Python? → NO
-            """,
-                ),
-                ("user", "{question}"),
-            ]
-        )
 
         try:
             with trace_span("health.validate"):
                 metrics.increment("health.validate.calls")
-                response = self.llm.invoke(prompt.format_messages(question=question))
+                response = self.llm.invoke(
+                    build_health_validator_messages(question)
+                )
                 decision = response.content.strip().upper()
                 logger.debug(f"LLM decision: {decision}")
 
