@@ -3,57 +3,55 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, field
-from threading import Lock
-from typing import Dict, List
+from typing import Any
 
 from langgraph.types import Command
 
 from src.healthbot.core.exceptions import WorkflowError
 from src.healthbot.core.logging import get_logger
+from src.healthbot.core.settings import Settings, get_settings
 from src.healthbot.observability.metrics import metrics
 from src.healthbot.observability.tracing import trace_span
+from src.healthbot.repositories.session_repository import (
+    InMemorySessionRepository,
+    SessionNotFoundError,
+    SessionRepository,
+)
 from src.healthbot.utils.get_interrupt_value import get_interrupt_value
 from src.healthbot.workflow.workflow_builder import WorkflowBuilder
 
 logger = get_logger(__name__)
 
 
-@dataclass
-class SessionData:
-    """In-memory representation of an agent session."""
-
-    session_id: str
-    history: List[dict] = field(default_factory=list)
-
-
 class SessionService:
     """Manage agent sessions and LangGraph resumable interactions."""
 
-    def __init__(self) -> None:
-        self._graph = WorkflowBuilder().build()
-        self._sessions: Dict[str, SessionData] = {}
-        self._lock = Lock()
+    def __init__(
+        self,
+        session_repository: SessionRepository | None = None,
+        settings: Settings | None = None,
+    ) -> None:
+        self.settings = settings or get_settings()
+        self._session_repository = session_repository or InMemorySessionRepository()
+        self._workflow_builder = WorkflowBuilder(settings=self.settings)
+        self._graph = self._workflow_builder.build()
 
     def create_session(self) -> str:
         """Create and store a new conversation session identifier."""
         session_id = str(uuid.uuid4())
-        with self._lock:
-            self._sessions[session_id] = SessionData(session_id=session_id)
+        self._session_repository.create_session(session_id)
         metrics.increment("session.created")
         logger.info("Created session %s", session_id)
         return session_id
 
     def list_sessions(self) -> list[str]:
         """Return all active session identifiers."""
-        with self._lock:
-            return list(self._sessions.keys())
+        return self._session_repository.list_sessions()
 
     def ensure_session(self, session_id: str) -> None:
         """Validate that the session exists."""
-        with self._lock:
-            if session_id not in self._sessions:
-                raise WorkflowError(f"Unknown session_id: {session_id}")
+        if not self._session_repository.exists(session_id):
+            raise WorkflowError(f"Unknown session_id: {session_id}")
 
     def ask(self, session_id: str, question: str) -> dict:
         """Start a conversation turn for a given session."""
@@ -110,15 +108,24 @@ class SessionService:
             return payload
 
     def get_history(self, session_id: str) -> list[dict]:
-        """Return the in-memory event history for a session."""
+        """Return the persisted event history for a session."""
         self.ensure_session(session_id)
-        with self._lock:
-            return list(self._sessions[session_id].history)
+        try:
+            return self._session_repository.get_history(session_id)
+        except SessionNotFoundError as exc:
+            raise WorkflowError(f"Unknown session_id: {session_id}") from exc
+
+    def close(self) -> None:
+        """Release repository and workflow resources."""
+        self._session_repository.close()
+        self._workflow_builder.close()
 
     def _append_history(self, session_id: str, entry: dict) -> None:
         """Append a new event to the session history."""
-        with self._lock:
-            self._sessions[session_id].history.append(entry)
+        try:
+            self._session_repository.append_event(session_id, entry)
+        except SessionNotFoundError as exc:
+            raise WorkflowError(f"Unknown session_id: {session_id}") from exc
 
     def _extract_last_message_content(self, result: dict) -> str | None:
         """
