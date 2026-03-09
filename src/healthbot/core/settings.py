@@ -44,6 +44,21 @@ class Settings(BaseSettings):
     default_thread_prefix: str = Field(default="session", alias="DEFAULT_THREAD_PREFIX")
     allowed_origins_raw: str = Field(default="*", alias="ALLOWED_ORIGINS")
 
+    session_backend: str = Field(default="redis", alias="SESSION_BACKEND")
+    redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
+    session_ttl_seconds: int = Field(default=86400, alias="SESSION_TTL_SECONDS")
+    redis_key_prefix: str = Field(default="medlearn", alias="REDIS_KEY_PREFIX")
+
+    checkpoint_backend: str = Field(default="sqlite", alias="CHECKPOINT_BACKEND")
+    checkpoint_sqlite_path: str = Field(
+        default=".data/langgraph_checkpoints.db",
+        alias="CHECKPOINT_SQLITE_PATH",
+    )
+    checkpoint_postgres_url: str | None = Field(
+        default=None,
+        alias="CHECKPOINT_POSTGRES_URL",
+    )
+
     @property
     def allowed_origins(self) -> List[str]:
         """Return CORS origins as a parsed list."""
