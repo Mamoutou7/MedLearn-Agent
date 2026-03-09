@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.healthbot.api.dependencies import get_session_service
 from src.healthbot.api.middleware.error_handler import register_exception_handlers
 from src.healthbot.api.middleware.request_logging import RequestLoggingMiddleware
 from src.healthbot.api.routes import chat, health, quiz
@@ -25,7 +26,11 @@ async def lifespan(app: FastAPI):
     - external telemetry
     - cached workflow instances
     """
-    yield
+    service = get_session_service()
+    try:
+        yield
+    finally:
+        service.close()
 
 
 app = FastAPI(
