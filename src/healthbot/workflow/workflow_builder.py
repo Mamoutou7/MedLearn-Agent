@@ -18,9 +18,10 @@ from IPython.display import Image, display
 from src.healthbot.infra.llm_provider import LLMProvider
 from src.healthbot.domain.models import WorkflowState
 from src.healthbot.infra.web_search_tool import web_search_tool
-
 from src.healthbot.workflow.nodes import HealthWorkflowNodes
 from src.healthbot.workflow.router import WorkflowRouter
+from src.healthbot.infra.checkpointing.factory import CheckpointerHandle, build_checkpointer
+from src.healthbot.core.settings import Settings, get_settings
 
 from src.healthbot.core.logging import get_logger
 
@@ -36,9 +37,10 @@ class WorkflowBuilder:
     application logic.
     """
 
-    def __init__(self):
+    def __init__(self, settings: Settings | None = None):
         """Initialize the workflow builder."""
-        self.memory = MemorySaver()
+        self.settings = settings or get_settings()
+        self.checkpointer_handle: CheckpointerHandle = build_checkpointer(self.settings)
         self.nodes = HealthWorkflowNodes(LLMProvider())
         self.router = WorkflowRouter()
 
@@ -107,7 +109,7 @@ class WorkflowBuilder:
         # Compile Graph
         logger.info("Compiling HealthBot workflow")
 
-        graph = workflow.compile(checkpointer=self.memory)
+        graph = workflow.compile(checkpointer=self.checkpointer_handle.resource)
 
         logger.info("Workflow successfully compiled")
 
@@ -123,3 +125,6 @@ class WorkflowBuilder:
 
         with open("healthbot_graph.png", "wb") as f:
             f.write(graph_png)
+
+    def close(self) -> None:
+        self.checkpointer_handle.close()
