@@ -1,0 +1,27 @@
+from healthbot.repositories.session_repository import (
+    InMemorySessionRepository,
+    SessionNotFoundError,
+)
+
+
+def test_in_memory_session_repository_roundtrip():
+    repo = InMemorySessionRepository()
+
+    repo.create_session("abc")
+    repo.append_event("abc", {"type": "ask", "question": "What is flu?"})
+
+    assert repo.exists("abc") is True
+    assert repo.list_sessions() == ["abc"]
+    assert repo.get_history("abc") == [
+        {"type": "ask", "question": "What is flu?"}
+    ]
+
+
+def test_in_memory_session_repository_rejects_unknown_session():
+    repo = InMemorySessionRepository()
+
+    try:
+        repo.append_event("missing", {"type": "ask"})
+        assert False, "Expected SessionNotFoundError"
+    except SessionNotFoundError:
+        pass
