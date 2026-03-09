@@ -67,7 +67,6 @@ class WorkflowError(HealthBotError):
 
     pass
 
-
 class QuizGenerationError(HealthBotError):
     pass
 
