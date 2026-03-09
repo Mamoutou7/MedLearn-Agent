@@ -74,3 +74,6 @@ class QuizGenerationError(HealthBotError):
 
 class QuizGradingError(HealthBotError):
     pass
+
+class CheckpointerFactoryError(RuntimeError):
+    pass
