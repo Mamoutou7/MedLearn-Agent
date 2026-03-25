@@ -8,6 +8,7 @@ from src.healthbot.prompts.health_agent import (
 from src.healthbot.prompts.health_validator import HEALTH_VALIDATOR_PROMPT
 from src.healthbot.prompts.quiz_generation import QUIZ_GENERATION_PROMPT
 from src.healthbot.prompts.quiz_explanation import QUIZ_EXPLANATION_PROMPT
+from src.healthbot.prompts.rejection import REJECTION_PROMPT
 
 
 PROMPT_REGISTRY: dict[str, PromptSpec] = {
@@ -16,6 +17,7 @@ PROMPT_REGISTRY: dict[str, PromptSpec] = {
     WELCOME_PROMPT.name: WELCOME_PROMPT,
     QUIZ_GENERATION_PROMPT.name: QUIZ_GENERATION_PROMPT,
     QUIZ_EXPLANATION_PROMPT.name: QUIZ_EXPLANATION_PROMPT,
+    REJECTION_PROMPT.name: REJECTION_PROMPT,
 }
 
 

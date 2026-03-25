@@ -23,6 +23,9 @@ from src.healthbot.services.quiz_service import (
     QuizService,
 )
 
+from src.healthbot.prompts.rejection import build_rejection_messages
+from src.healthbot.services.prompt_manager import PromptManager
+from src.healthbot.services.safety_service import SafetyService
 
 logger = get_logger(__name__)
 
@@ -41,6 +44,8 @@ class HealthWorkflowNodes:
         self.grading_service = QuizGradingService()
         self.explanation_service = ExplanationService(llm_provider)
         self.approval_service = QuizApprovalService()
+        self.prompt_manager = PromptManager()
+        self.safety_service = SafetyService()
 
     # ENTRY POINT
     def entry_point(self, state: WorkflowState) -> Dict:
@@ -108,30 +113,12 @@ class HealthWorkflowNodes:
 
     # REJECTION NODE
     def rejection_node(self, state: WorkflowState):
-        """
-        Reject non-health questions.
-        """
-
+        """Reject non-health questions using the central prompt registry."""
         question = state.get("question", "")
-
         logger.info("Rejecting non-health question")
 
-        rejection_message = f"""
-            I'm sorry — I can only help with **health related topics**.
-            
-            Your question: {question}
-            I'm specifically designed to help with health-related topics such as:
-            - Medical Conditions & Diseases
-            - Health Symptoms & Concerns
-            - Nutrition & Wellness
-            - Exercise & Fitness
-            - Mental Health & Wellness
-            - Preventive Care & Screenings
-            - Medical Procedures & Treatments
-    
-            Please ask me about any of these health topics or medical conditions instead. 
-            I'm here to support your health education journey and provide accurate, helpful information about your health!
-        """
+        rejection_messages = build_rejection_messages(question=question)
+        rejection_message = self.llm.invoke(rejection_messages).content
 
         return {
             "messages": [AIMessage(content=rejection_message)],
