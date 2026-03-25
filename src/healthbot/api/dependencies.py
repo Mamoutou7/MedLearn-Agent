@@ -12,6 +12,7 @@ from src.healthbot.repositories.session_repository import (
     SessionRepository,
     SessionRepositoryError,
 )
+from src.healthbot.repositories.sqlite_session_repository import SQLiteSessionRepository
 from src.healthbot.services.session_service import SessionService
 
 logger = get_logger(__name__)
@@ -19,11 +20,18 @@ logger = get_logger(__name__)
 
 @lru_cache(maxsize=1)
 def get_session_repository() -> SessionRepository:
+    """Return the configured session repository implementation."""
     backend = settings.session_backend.lower().strip()
 
     if backend == "memory":
         logger.info("Using in-memory session repository")
         return InMemorySessionRepository()
+
+    if backend == "sqlite":
+        repository = SQLiteSessionRepository(database_path=settings.session_sqlite_path)
+        repository.ping()
+        logger.info("Using SQLite session repository | path=%s", settings.session_sqlite_path)
+        return repository
 
     if backend == "redis":
         try:
@@ -35,12 +43,12 @@ def get_session_repository() -> SessionRepository:
             repository.ping()
             logger.info("Using Redis session repository | redis_url=%s", settings.redis_url)
             return repository
-        except SessionRepositoryError:
+        except SessionRepositoryError as exc:
             if settings.session_backend_fallback_enabled:
                 logger.warning(
-                    "Redis unavailable, falling back to in-memory session repository | redis_url=%s",
+                    "Redis unavailable, falling back to in-memory session repository | redis_url=%s | reason=%s",
                     settings.redis_url,
-                    exc_info=True,
+                    exc,
                 )
                 return InMemorySessionRepository()
             raise
@@ -50,4 +58,5 @@ def get_session_repository() -> SessionRepository:
 
 @lru_cache(maxsize=1)
 def get_session_service() -> SessionService:
+    """Return the session service singleton."""
     return SessionService(session_repository=get_session_repository(), settings=settings)
