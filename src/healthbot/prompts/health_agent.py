@@ -5,6 +5,10 @@ from src.healthbot.prompts.safety import (
     GLOBAL_MEDICAL_SAFETY_RULES,
     compose_system_prompt,
 )
+from src.healthbot.core.logging import get_logger
+
+
+logger = get_logger(__name__)
 
 
 HEALTH_AGENT_PROMPT = PromptSpec(
@@ -25,8 +29,11 @@ Behavior rules:
 - Prefer short paragraphs or bullet points when useful.
 - Separate established facts from uncertainty.
 - Focus on education, not diagnosis.
-- If web_search_tool is available, use it only when additional evidence is needed.
 - When possible, include practical next steps the user can discuss with a clinician.
+- If web_search_tool is available, use it when recency, source verification, or medical evidence matters.
+- Prefer high-quality medical or public-health sources when tools are used.
+- Distinguish clearly between established facts, uncertainty, and urgent red flags.
+- When using retrieved evidence, mention the source organizations or domains in the answer.
                     """,
                 ),
             ),
@@ -69,3 +76,28 @@ def build_health_agent_messages(question: str):
 
 def build_welcome_messages(question: str):
     return WELCOME_PROMPT.format_messages(question=question)
+
+
+def health_agent(self, state: WorkflowState) -> Dict:
+    """Main LLM agent node."""
+    question = state.get("question", "")
+    history = state.get("messages", [])
+
+    logger.info("Running health agent")
+
+    try:
+        prompt_messages = build_health_agent_messages(question=question)
+
+        if history:
+            messages = prompt_messages[:-1] + history[-4:] + [prompt_messages[-1]]
+        else:
+            messages = prompt_messages
+
+        response = self.llm.invoke(messages)
+        response = self.safety_service.apply(response, question=question)
+
+        return {"messages": [response]}
+
+    except Exception as exc:
+        logger.exception("LLM execution failed")
+        raise LLMServiceError("Agent execution failed") from exc
