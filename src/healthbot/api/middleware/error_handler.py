@@ -18,9 +18,15 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(HealthBotError)
     async def handle_healthbot_error(request: Request, exc: HealthBotError):
         metrics.increment("http.errors.healthbot")
-        logger.error("Handled HealthBotError on %s", request.url.path, exc_info=True)
+        logger.error(
+            "Handled HealthBotError on %s | status_code=%s | error=%s",
+            request.url.path,
+            getattr(exc, "status_code", 400),
+            exc.__class__.__name__,
+            exc_info=True,
+        )
         return JSONResponse(
-            status_code=400,
+            status_code=getattr(exc, "status_code", 400),
             content={
                 "error": exc.__class__.__name__,
                 "detail": str(exc),
