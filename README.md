@@ -8,10 +8,14 @@ It helps users explore health topics, receive plain-language explanations, and o
 
 - answers health-related educational questions
 - validates whether a query is in scope
-- uses web search when the model needs external information
+- uses curated web search when the model needs external information
 - offers a resumable quiz flow with approval and answer steps
+- persists sessions across restarts with pluggable storage backends
+- supports persistent checkpointing for long-running workflows
+- centralizes prompts for easier maintenance and versioning
 - exposes the workflow through a clean FastAPI API
-- includes basic logging, tracing, and in-process metrics
+- includes structured logging, tracing, and lightweight metrics export
+- strengthens medical safety, source quality, and answer grounding
 
 ## Core workflow
 
@@ -19,9 +23,11 @@ It helps users explore health topics, receive plain-language explanations, and o
 2. Send a health question
 3. Validate that the topic is health-related
 4. Generate an explanation
-5. Offer a quiz
-6. Resume the workflow with quiz approval or rejection
-7. If approved, collect the answer and return graded feedback
+5. Optionally retrieve external health evidence from trusted sources
+6. Apply safety and grounding reinforcement
+7. Offer a quiz
+8. Resume the workflow with quiz approval or rejection
+9. If approved, collect the answer and return graded feedback
 
 ## Architecture at a glance
 
@@ -30,12 +36,12 @@ The codebase is organized into clear layers:
 - `api/` — FastAPI app, routes, schemas, middleware
 - `core/` — configuration, logging, exceptions
 - `domain/` — shared workflow and quiz models
-- `infra/` — LLM and web-search integrations
-- `services/` — validation, quiz, explanation, and session logic
+- `infra/` — LLM, web-search, and checkpointing integrations
+- `services/` — validation, quiz, explanation, prompt, safety, and session logic
 - `workflow/` — LangGraph nodes, router, and graph builder
 - `observability/` — metrics and tracing helpers
-- `repositories/` — persistence boundary for future storage backends
-- `prompts/` — prompt templates and prompt management
+- `repositories/` — persistence backends for sessions
+- `prompts/` — centralized prompt templates and prompt registry
 
 See [`docs/architecture.md`](docs/architecture.md) for the detailed design.
 
@@ -72,6 +78,8 @@ MedLearn-Agent/
 - LangGraph / LangChain
 - OpenAI chat models
 - Tavily Search
+- SQLite / Redis for session persistence 
+- SQLite / Postgres-ready checkpointing
 - Pydantic / pydantic-settings
 - Pytest
 
@@ -99,6 +107,7 @@ Create a `.env` file at the project root:
 OPENAI_API_KEY=your_openai_key
 TAVILY_API_KEY=your_tavily_key
 MODEL_NAME=gpt-4o-mini
+
 APP_NAME=MedLearn Agent
 APP_ENV=development
 DEBUG=true
@@ -106,6 +115,28 @@ API_HOST=0.0.0.0
 API_PORT=8000
 LOG_LEVEL=INFO
 ALLOWED_ORIGINS=*
+
+# Session persistence
+SESSION_BACKEND=sqlite
+SESSION_SQLITE_PATH=.data/sessions.db
+SESSION_BACKEND_FALLBACK_ENABLED=true
+
+# Redis (optional)
+REDIS_URL=redis://localhost:6379/0
+SESSION_TTL_SECONDS=86400
+REDIS_KEY_PREFIX=medlearn
+
+# Workflow checkpointing
+CHECKPOINT_BACKEND=sqlite
+CHECKPOINT_SQLITE_PATH=.data/langgraph_checkpoints.db
+CHECKPOINT_POSTGRES_URL=
+
+# Observability
+OBSERVABILITY_BACKEND=prometheus_text
+
+# Source quality / grounding
+TRUSTED_HEALTH_DOMAINS=cdc.gov,who.int,nih.gov,medlineplus.gov,nhs.uk,mayoclinic.org,clevelandclinic.org,nice.org.uk,msdmanuals.com
+SOURCE_RESULT_LIMIT=5
 ```
 
 ## Run the API
@@ -135,6 +166,7 @@ python scripts/run_healthbot.py
 - `GET /api/v1/health` — liveness probe
 - `GET /api/v1/ready` — readiness probe
 - `GET /api/v1/metrics` — metrics snapshot
+- `GET /api/v1/metrics/prometheus` — Prometheus-style metrics export
 
 ## Testing
 
@@ -146,20 +178,20 @@ For reliable local setup, make sure all runtime dependencies required by LangCha
 
 ## Current limitations
 
-- session state is stored in memory
-- prompts are embedded directly in services and workflow nodes
-- observability is local and lightweight
-- medical safety, source quality, and answer grounding can be strengthened
-- there is no persistent checkpointing for long-running sessions
+- observability is still lightweight compared with a full production telemetry stack 
+- Redis and Postgres deployment paths may require additional infra wiring depending on environment 
+- medical safety remains educational and should not be treated as clinical decision support 
+- source retrieval quality depends on external search and prompt behavior 
+- prompt evaluation and regression testing can still be expanded
 
 ## Roadmap direction
 
 Futures steps:
-
-- move prompts to `src/healthbot/prompts`
-- add persistent state and checkpoint storage
-- introduce stronger medical safety guardrails
-- improve evaluation, reliability, and deployment readiness
+- add comprehensive tests for SQLite session persistence and checkpoint recovery 
+- introduce stronger evaluation pipelines for grounding and safety 
+- add OpenTelemetry / Prometheus / Grafana integration 
+- support richer prompt versioning and audit workflows 
+- improve reliability and deployment readiness for production environments
 
 ## License
 
