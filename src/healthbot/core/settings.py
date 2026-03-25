@@ -45,6 +45,10 @@ class Settings(BaseSettings):
     allowed_origins_raw: str = Field(default="*", alias="ALLOWED_ORIGINS")
 
     session_backend: str = Field(default="redis", alias="SESSION_BACKEND")
+    session_backend_fallback_enabled: bool = Field(
+        default=True,
+        alias="SESSION_BACKEND_FALLBACK_ENABLED",
+    )
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
     session_ttl_seconds: int = Field(default=86400, alias="SESSION_TTL_SECONDS")
     redis_key_prefix: str = Field(default="medlearn", alias="REDIS_KEY_PREFIX")
