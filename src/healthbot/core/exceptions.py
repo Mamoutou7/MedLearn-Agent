@@ -1,78 +1,59 @@
 """
 Custom exceptions used across the HealthBot application.
-
-This module centralizes domain-specific exceptions in order to:
-- improve error readability
-- simplify debugging
-- avoid using generic Exception types
 """
+
+from __future__ import annotations
 
 from typing import Optional
 
 
 class HealthBotError(Exception):
-    """
-    Base exception class for all HealthBot related errors.
-    """
+    """Base exception class for all HealthBot related errors."""
+
+    status_code = 400
 
     def __init__(self, message: str, context: Optional[dict] = None):
-        """
-        Parameters
-        ----------
-        message : str
-            Human readable error description
-        context : Optional[dict]
-            Additional contextual debugging data
-        """
         super().__init__(message)
         self.context = context or {}
 
 
 class ConfigurationError(HealthBotError):
-    """
-    Raised when application configuration is invalid or incomplete.
-    """
-
-    pass
+    """Raised when application configuration is invalid or incomplete."""
+    status_code = 500
 
 
 class ValidationError(HealthBotError):
-    """
-    Raised when a user request fails domain validation.
-    """
-
-    pass
+    """Raised when a user request fails domain validation."""
+    status_code = 422
 
 
 class LLMServiceError(HealthBotError):
-    """
-    Raised when interaction with the LLM fails.
-    """
-
-    pass
+    """Raised when interaction with the LLM fails."""
+    status_code = 502
 
 
 class ToolExecutionError(HealthBotError):
-    """
-    Raised when an external tool fails (web search, API calls, etc.).
-    """
-
-    pass
+    """Raised when an external tool fails."""
+    status_code = 502
 
 
 class WorkflowError(HealthBotError):
-    """
-    Raised when the LangGraph workflow encounters an invalid state.
-    """
+    """Raised when the LangGraph workflow encounters an invalid state."""
+    status_code = 400
 
-    pass
+
+class SessionBackendUnavailableError(HealthBotError):
+    """Raised when the configured session backend is unavailable."""
+    status_code = 503
+
 
 class QuizGenerationError(HealthBotError):
-    pass
+    status_code = 500
 
 
 class QuizGradingError(HealthBotError):
-    pass
+    status_code = 500
+
 
 class CheckpointerFactoryError(RuntimeError):
     pass
