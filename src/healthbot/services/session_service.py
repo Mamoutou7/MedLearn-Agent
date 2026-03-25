@@ -12,10 +12,15 @@ from src.healthbot.core.logging import get_logger
 from src.healthbot.core.settings import Settings, get_settings
 from src.healthbot.observability.metrics import metrics
 from src.healthbot.observability.tracing import trace_span
+from src.healthbot.core.exceptions import (
+    SessionBackendUnavailableError,
+    WorkflowError,
+)
 from src.healthbot.repositories.session_repository import (
     InMemorySessionRepository,
     SessionNotFoundError,
     SessionRepository,
+    SessionRepositoryError,
 )
 from src.healthbot.utils.get_interrupt_value import get_interrupt_value
 from src.healthbot.workflow.workflow_builder import WorkflowBuilder
@@ -39,18 +44,43 @@ class SessionService:
     def create_session(self) -> str:
         """Create and store a new conversation session identifier."""
         session_id = str(uuid.uuid4())
-        self._session_repository.create_session(session_id)
+
+        try:
+            self._session_repository.create_session(session_id)
+        except SessionRepositoryError as exc:
+            logger.exception("Failed to create session in configured backend")
+            raise SessionBackendUnavailableError(
+                "Session storage backend is unavailable.",
+                context={"backend": self.settings.session_backend},
+            ) from exc
+
         metrics.increment("session.created")
         logger.info("Created session %s", session_id)
         return session_id
 
     def list_sessions(self) -> list[str]:
         """Return all active session identifiers."""
-        return self._session_repository.list_sessions()
+        try:
+            return self._session_repository.list_sessions()
+        except SessionRepositoryError as exc:
+            logger.exception("Failed to list sessions from configured backend")
+            raise SessionBackendUnavailableError(
+                "Session storage backend is unavailable.",
+                context={"backend": self.settings.session_backend},
+            ) from exc
 
     def ensure_session(self, session_id: str) -> None:
         """Validate that the session exists."""
-        if not self._session_repository.exists(session_id):
+        try:
+            exists = self._session_repository.exists(session_id)
+        except SessionRepositoryError as exc:
+            logger.exception("Failed to check session existence")
+            raise SessionBackendUnavailableError(
+                "Session storage backend is unavailable.",
+                context={"backend": self.settings.session_backend, "session_id": session_id},
+            ) from exc
+
+        if not exists:
             raise WorkflowError(f"Unknown session_id: {session_id}")
 
     def ask(self, session_id: str, question: str) -> dict:
@@ -108,12 +138,20 @@ class SessionService:
             return payload
 
     def get_history(self, session_id: str) -> list[dict]:
-        """Return the persisted event history for a session."""
         self.ensure_session(session_id)
         try:
             return self._session_repository.get_history(session_id)
         except SessionNotFoundError as exc:
-            raise WorkflowError(f"Unknown session_id: {session_id}") from exc
+            raise WorkflowError(
+                f"Unknown session_id: {session_id}",
+                context={"session_id": session_id},
+            ) from exc
+        except SessionRepositoryError as exc:
+            logger.exception("Failed to fetch session history")
+            raise SessionBackendUnavailableError(
+                "Session storage backend is unavailable.",
+                context={"backend": self.settings.session_backend, "session_id": session_id},
+            ) from exc
 
     def close(self) -> None:
         """Release repository and workflow resources."""
@@ -121,11 +159,19 @@ class SessionService:
         self._workflow_builder.close()
 
     def _append_history(self, session_id: str, entry: dict) -> None:
-        """Append a new event to the session history."""
         try:
             self._session_repository.append_event(session_id, entry)
         except SessionNotFoundError as exc:
-            raise WorkflowError(f"Unknown session_id: {session_id}") from exc
+            raise WorkflowError(
+                f"Unknown session_id: {session_id}",
+                context={"session_id": session_id},
+            ) from exc
+        except SessionRepositoryError as exc:
+            logger.exception("Failed to append session history")
+            raise SessionBackendUnavailableError(
+                "Session storage backend is unavailable.",
+                context={"backend": self.settings.session_backend, "session_id": session_id},
+            ) from exc
 
     def _extract_last_message_content(self, result: dict) -> str | None:
         """
