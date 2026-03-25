@@ -168,30 +168,41 @@ python scripts/run_healthbot.py
 - `GET /api/v1/metrics` — metrics snapshot
 - `GET /api/v1/metrics/prometheus` — Prometheus-style metrics export
 
-## Testing
 
+
+## Testing
+### Regression and units testing
 ```bash
 pytest
 ```
+### Prompt evaluation
 
-For reliable local setup, make sure all runtime dependencies required by LangChain and LangGraph are installed before running the tests.
+Run the prompt evaluation suite:
+
+```bash
+python -m scripts.run_prompt_evals
+```
 
 ## Current limitations
-
 - observability is still lightweight compared with a full production telemetry stack 
 - Redis and Postgres deployment paths may require additional infra wiring depending on environment 
-- medical safety remains educational and should not be treated as clinical decision support 
+- medical safety is improved (red flag detection, grounding hints) but remains educational and must not be used for clinical decision-making
+- prompt evaluation and regression testing are implemented but can be expanded with larger datasets, automated CI gating, and LLM-as-judge approaches
 - source retrieval quality depends on external search and prompt behavior 
-- prompt evaluation and regression testing can still be expanded
 
 ## Roadmap direction
 
 Futures steps:
-- add comprehensive tests for SQLite session persistence and checkpoint recovery 
-- introduce stronger evaluation pipelines for grounding and safety 
-- add OpenTelemetry / Prometheus / Grafana integration 
-- support richer prompt versioning and audit workflows 
-- improve reliability and deployment readiness for production environments
+- introduce automated regression gating in CI based on evaluation score thresholds
+- implement LLM-as-judge evaluation and comparison between prompt versions
+- integrate OpenTelemetry + Prometheus + Grafana for production-grade observability
+- add distributed tracing across API, workflow, and tool layers
+- support advanced prompt versioning (A/B testing, audit logs, rollback mechanisms)
+- improve medical safety with structured guardrails (risk classification, escalation policies)
+- enhance source grounding with citation formatting and evidence ranking
+- add full production-ready deployment paths (Docker Compose, Kubernetes, managed Redis/Postgres)
+- strengthen checkpointing with recovery workflows, replay capabilities, and long-session resilience
+- introduce rate limiting, authentication, and API governance
 
 ## License
 
