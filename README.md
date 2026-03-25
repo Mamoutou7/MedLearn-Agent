@@ -61,6 +61,7 @@ MedLearn-Agent/
 │       ├── cli/
 │       ├── core/
 │       ├── domain/
+│       │── evals/
 │       ├── infra/
 │       ├── observability/
 │       ├── prompts/
