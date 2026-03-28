@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.healthbot.evals.runner import PromptEvalRunner
-from src.healthbot.infra.llm_provider import LLMProvider
+from healthbot.evals.runner import PromptEvalRunner
+from healthbot.infra.llm_provider import LLMProvider
 
 
 def main() -> None:
