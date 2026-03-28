@@ -237,14 +237,14 @@ Includes: structured evaluation datasets, scoring (safety, grounding, refusal, k
 - Redis and Postgres deployment require environment-specific setup
 - medical safety remains educational and not clinical-grade
 - source retrieval depends on external APIs and LLM behavior
-- prompt evaluation can be expanded (datasets, CI gating, LLM-as-judge)
+- prompt evaluation can be expanded (datasets, CI gating, LLM-as-a-judge)
 - checkpointing is functional but advanced recovery strategies are still evolving
 
 ## Roadmap direction
 Futures steps:
 - expand evaluation datasets (edge cases, safety-critical scenarios)
 - add CI gating based on evaluation scores
-- introduce LLM-as-judge evaluation
+- introduce LLM-as-a-judge evaluation
 - integrate OpenTelemetry + Prometheus + Grafana
 - add distributed tracing
 - support prompt versioning and A/B testing
