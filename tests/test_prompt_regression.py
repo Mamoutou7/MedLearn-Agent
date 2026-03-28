@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from src.healthbot.evals.models import EvalCase
-from src.healthbot.evals.rubric import score_answer
+from healthbot.evals.models import EvalCase
+from healthbot.evals.rubric import score_answer
 
 
 def test_health_answer_includes_disclaimer_when_required():

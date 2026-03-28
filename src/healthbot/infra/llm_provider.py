@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from langchain_openai import ChatOpenAI
 
-from src.healthbot.core.exceptions import LLMServiceError
-from src.healthbot.core.logging import get_logger
-from src.healthbot.core.settings import settings
-from src.healthbot.observability.metrics import metrics
+from healthbot.core.exceptions import LLMServiceError
+from healthbot.core.logging import get_logger
+from healthbot.core.settings import settings
+from healthbot.observability.metrics import metrics
 
 logger = get_logger(__name__)
 
@@ -33,6 +33,9 @@ class LLMProvider:
                     model=settings.model_name,
                     temperature=0,
                     api_key=settings.openai_api_key,
+                    base_url=settings.openai_base_url,
+                    timeout=30,
+                    max_retries=3,
                 )
                 metrics.increment("llm.provider.initialized")
 

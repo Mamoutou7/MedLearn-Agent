@@ -5,27 +5,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.healthbot.api.dependencies import get_session_service
-from src.healthbot.api.middleware.error_handler import register_exception_handlers
-from src.healthbot.api.middleware.request_logging import RequestLoggingMiddleware
-from src.healthbot.api.routes import chat, health, quiz
-from src.healthbot.core.logging import configure_logging
-from src.healthbot.core.settings import settings
+from healthbot.api.dependencies import get_session_service
+from healthbot.api.middleware.error_handler import register_exception_handlers
+from healthbot.api.middleware.request_logging import RequestLoggingMiddleware
+from healthbot.api.routes import chat, health, quiz
+from healthbot.core.logging import configure_logging
+from healthbot.core.settings import settings
 
 configure_logging()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Manage application startup and shutdown events.
-
-    This is the right place to initialize shared resources such as:
-    - DB clients
-    - Redis connections
-    - external telemetry
-    - cached workflow instances
-    """
     service = get_session_service()
     try:
         yield
@@ -40,10 +31,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+if settings.is_production and settings.allowed_origins == ["*"]:
+    raise ValueError("Wildcard CORS is not allowed in production")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
-    allow_credentials=True,
+    allow_credentials=False if settings.allowed_origins == ["*"] else True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

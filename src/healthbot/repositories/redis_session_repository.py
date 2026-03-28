@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from src.healthbot.repositories.session_repository import (
+from healthbot.repositories.session_repository import (
     JsonSerializer,
     SessionKeyBuilder,
     SessionNotFoundError,

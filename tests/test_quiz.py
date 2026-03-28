@@ -1,4 +1,3 @@
-from unittest.mock import MagicMock
 
 from healthbot.services.quiz_service import (
     QuizService,

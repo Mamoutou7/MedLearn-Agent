@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from src.healthbot.core.logging import get_logger
-from src.healthbot.observability.metrics import metrics
-from src.healthbot.prompts.registry import get_prompt
+from healthbot.core.logging import get_logger
+from healthbot.observability.metrics import metrics
+from healthbot.prompts.registry import get_prompt
 
 logger = get_logger(__name__)
 

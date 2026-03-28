@@ -4,8 +4,8 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Generator
 
-from src.healthbot.core.logging import get_logger
-from src.healthbot.observability.metrics import metrics
+from healthbot.core.logging import get_logger
+from healthbot.observability.metrics import metrics
 
 logger = get_logger(__name__)
 request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)

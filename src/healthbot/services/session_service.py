@@ -7,23 +7,22 @@ from typing import Any
 
 from langgraph.types import Command
 
-from src.healthbot.core.exceptions import WorkflowError
-from src.healthbot.core.logging import get_logger
-from src.healthbot.core.settings import Settings, get_settings
-from src.healthbot.observability.metrics import metrics
-from src.healthbot.observability.tracing import trace_span
-from src.healthbot.core.exceptions import (
+from healthbot.core.logging import get_logger
+from healthbot.core.settings import Settings, get_settings
+from healthbot.observability.metrics import metrics
+from healthbot.observability.tracing import trace_span
+from healthbot.core.exceptions import (
     SessionBackendUnavailableError,
     WorkflowError,
 )
-from src.healthbot.repositories.session_repository import (
+from healthbot.repositories.session_repository import (
     InMemorySessionRepository,
     SessionNotFoundError,
     SessionRepository,
     SessionRepositoryError,
 )
-from src.healthbot.utils.get_interrupt_value import get_interrupt_value
-from src.healthbot.workflow.workflow_builder import WorkflowBuilder
+from healthbot.utils.get_interrupt_value import get_interrupt_value
+from healthbot.workflow.workflow_builder import WorkflowBuilder
 
 logger = get_logger(__name__)
 
@@ -259,3 +258,12 @@ class SessionService:
             return contents[-2]
 
         return contents[-1]
+
+
+
+    def ping(self) -> bool:
+        repository = self._session_repository
+        ping_method = getattr(repository, "ping", None)
+        if callable(ping_method):
+            return bool(ping_method())
+        return True

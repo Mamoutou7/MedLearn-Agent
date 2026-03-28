@@ -1,39 +1,44 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
+from fastapi.responses import JSONResponse
 
-from src.healthbot.core.settings import settings
-from src.healthbot.observability.metrics import metrics
+from healthbot.api.dependencies import get_session_service
+from healthbot.api.security import require_api_key
+from healthbot.observability.metrics import metrics
+from healthbot.services.session_service import SessionService
 
 router = APIRouter(tags=["health"])
 
 
 @router.get("/health")
 async def healthcheck():
-    """Liveness probe used by load balancers and orchestrators."""
     return {"status": "ok"}
 
 
 @router.get("/ready")
-async def readiness():
-    """Readiness probe to signal whether the application is ready to serve traffic."""
-    return {
-        "status": "ready",
-        "session_backend": settings.session_backend,
-        "checkpoint_backend": settings.checkpoint_backend,
-        "observability_backend": settings.observability_backend,
-    }
+async def readiness(session_service: SessionService = Depends(get_session_service)):
+    checks = {"session_backend": "ok", "checkpointer": "ok"}
+
+    try:
+        session_service.ping()
+    except Exception:
+        checks["session_backend"] = "error"
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "checks": checks},
+        )
+
+    return {"status": "ready", "checks": checks}
 
 
-@router.get("/metrics")
+@router.get("/metrics", dependencies=[Depends(require_api_key)])
 async def get_metrics():
-    """Return a lightweight in-process metrics snapshot."""
     return metrics.snapshot()
 
 
-@router.get("/metrics/prometheus")
+@router.get("/metrics/prometheus", dependencies=[Depends(require_api_key)])
 async def get_prometheus_metrics():
-    """Return metrics in Prometheus text exposition format."""
     return Response(
         content=metrics.render_prometheus(),
         media_type="text/plain; version=0.0.4",

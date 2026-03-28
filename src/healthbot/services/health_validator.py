@@ -4,14 +4,13 @@ Health topic validation service.
 
 from __future__ import annotations
 
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import AIMessage
 
-from src.healthbot.infra.llm_provider import LLMProvider
-from src.healthbot.core.logging import get_logger
-from src.healthbot.observability.metrics import metrics
-from src.healthbot.observability.tracing import trace_span
-from src.healthbot.prompts.health_validator import build_health_validator_messages
+from healthbot.infra.llm_provider import LLMProvider
+from healthbot.core.logging import get_logger
+from healthbot.observability.metrics import metrics
+from healthbot.observability.tracing import trace_span
+from healthbot.prompts.health_validator import build_health_validator_messages
 
 logger = get_logger(__name__)
 

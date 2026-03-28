@@ -1,9 +1,17 @@
 import pytest
-import healthbot.infra.search_provider as search_provider_module
+from langchain_core.messages import AIMessage
 
 
-@pytest.fixture(autouse=True)
-def reset_search_provider_singleton():
-    search_provider_module._search_provider = None
-    yield
-    search_provider_module._search_provider = None
+class FakeLLM:
+    def invoke(self, messages):
+        return AIMessage(content="Stub response")
+
+
+class FakeLLMProvider:
+    def get_model(self):
+        return FakeLLM()
+
+
+@pytest.fixture
+def fake_llm_provider():
+    return FakeLLMProvider()

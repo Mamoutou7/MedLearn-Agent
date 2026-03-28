@@ -8,7 +8,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional
 
-from src.healthbot.core.settings import settings
+from healthbot.core.settings import settings
 
 DEFAULT_LOG_FORMAT = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 

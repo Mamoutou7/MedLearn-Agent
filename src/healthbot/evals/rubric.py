@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.healthbot.evals.models import EvalCase, EvalScore
+from healthbot.evals.models import EvalCase, EvalScore
 
 
 DISCLAIMER_HINTS = [

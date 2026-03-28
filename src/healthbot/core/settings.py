@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = Field(default=86400, alias="SESSION_TTL_SECONDS")
     session_sqlite_path: str = Field(default=".data/sessions.db", alias="SESSION_SQLITE_PATH")
 
-    checkpoint_backend: Literal["sqlite", "postgres"] = Field(
+    checkpoint_backend: Literal["memory", "redis", "sqlite"] = Field(
         default="sqlite",
         alias="CHECKPOINT_BACKEND",
     )

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from src.healthbot.api.dependencies import get_session_service
-from src.healthbot.api.schemas.quiz_schema import (
+from healthbot.api.dependencies import get_session_service
+from healthbot.api.schemas.quiz_schema import (
     QuizAnswerRequest,
     QuizApprovalRequest,
     QuizWorkflowResponse,
 )
-from src.healthbot.services.session_service import SessionService
+from healthbot.services.session_service import SessionService
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 

@@ -5,9 +5,9 @@ from __future__ import annotations
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from src.healthbot.core.exceptions import HealthBotError
-from src.healthbot.core.logging import get_logger
-from src.healthbot.observability.metrics import metrics
+from healthbot.core.exceptions import HealthBotError
+from healthbot.core.logging import get_logger
+from healthbot.observability.metrics import metrics
 
 logger = get_logger(__name__)
 

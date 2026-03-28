@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from src.healthbot.core.logging import get_logger
-from src.healthbot.core.settings import settings
-from src.healthbot.repositories.redis_session_repository import RedisSessionRepository
-from src.healthbot.repositories.session_repository import (
+from healthbot.core.logging import get_logger
+from healthbot.core.settings import settings
+from healthbot.repositories.redis_session_repository import RedisSessionRepository
+from healthbot.repositories.session_repository import (
     InMemorySessionRepository,
     SessionRepository,
     SessionRepositoryError,

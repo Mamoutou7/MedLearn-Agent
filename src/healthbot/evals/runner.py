@@ -3,11 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.healthbot.core.logging import get_logger
-from src.healthbot.evals.models import EvalCase, EvalResult
-from src.healthbot.evals.rubric import score_answer
-from src.healthbot.prompts.health_agent import build_health_agent_messages
-from src.healthbot.prompts.rejection import build_rejection_messages
+from healthbot.core.logging import get_logger
+from healthbot.evals.models import EvalCase, EvalResult
+from healthbot.evals.rubric import score_answer
+from healthbot.prompts.health_agent import build_health_agent_messages
+from healthbot.prompts.rejection import build_rejection_messages
 
 logger = get_logger(__name__)
 

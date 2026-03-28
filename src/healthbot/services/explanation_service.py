@@ -19,13 +19,13 @@ from typing import Dict
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from src.healthbot.domain.quiz_models import QuizExplanation
-from src.healthbot.infra.llm_provider import LLMProvider
-from src.healthbot.prompts.quiz_explanation import build_quiz_explanation_messages
-from src.healthbot.core.logging import get_logger
-from src.healthbot.core.exceptions import LLMServiceError
-from src.healthbot.observability.metrics import metrics
-from src.healthbot.observability.tracing import trace_span
+from healthbot.domain.quiz_models import QuizExplanation
+from healthbot.infra.llm_provider import LLMProvider
+from healthbot.prompts.quiz_explanation import build_quiz_explanation_messages
+from healthbot.core.logging import get_logger
+from healthbot.core.exceptions import LLMServiceError
+from healthbot.observability.metrics import metrics
+from healthbot.observability.tracing import trace_span
 
 logger = get_logger(__name__)
 

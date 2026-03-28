@@ -2,15 +2,13 @@ from __future__ import annotations
 
 from typing import Dict
 
-from langchain_core.prompts import ChatPromptTemplate
-
-from src.healthbot.domain.quiz_models import QuizQuestion
-from src.healthbot.infra.llm_provider import LLMProvider
-from src.healthbot.prompts.quiz_generation import build_quiz_generation_messages
-from src.healthbot.core.logging import get_logger
-from src.healthbot.core.exceptions import QuizGradingError, QuizGenerationError
-from src.healthbot.observability.metrics import metrics
-from src.healthbot.observability.tracing import trace_span
+from healthbot.domain.quiz_models import QuizQuestion
+from healthbot.infra.llm_provider import LLMProvider
+from healthbot.prompts.quiz_generation import build_quiz_generation_messages
+from healthbot.core.logging import get_logger
+from healthbot.core.exceptions import QuizGradingError, QuizGenerationError
+from healthbot.observability.metrics import metrics
+from healthbot.observability.tracing import trace_span
 
 logger = get_logger(__name__)
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from src.healthbot.prompts.base import PromptSpec, build_chat_prompt
-from src.healthbot.prompts.safety import compose_system_prompt
+from healthbot.prompts.base import PromptSpec, build_chat_prompt
+from healthbot.prompts.safety import compose_system_prompt
 
 
 REJECTION_PROMPT = PromptSpec(

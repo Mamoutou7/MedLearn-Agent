@@ -3,29 +3,30 @@ Workflow nodes used by the LangGraph state machine.
 """
 
 from typing import Dict, Literal
+from textwrap import dedent
+
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.types import Command, interrupt
 
-from src.healthbot.core.exceptions import LLMServiceError
-from src.healthbot.core.logging import get_logger
-from src.healthbot.domain.models import WorkflowState
-from src.healthbot.infra.llm_provider import LLMProvider
-from src.healthbot.prompts.health_agent import (
+from healthbot.core.exceptions import LLMServiceError
+from healthbot.core.logging import get_logger
+from healthbot.domain.models import WorkflowState
+from healthbot.infra.llm_provider import LLMProvider
+from healthbot.prompts.health_agent import (
     build_health_agent_messages,
     build_welcome_messages,
 )
-from src.healthbot.services.explanation_service import ExplanationService
-from src.healthbot.services.health_validator import HealthValidator
-from src.healthbot.services.quiz_service import (
+from healthbot.services.explanation_service import ExplanationService
+from healthbot.services.health_validator import HealthValidator
+from healthbot.services.quiz_service import (
     QuizApprovalService,
     QuizGradingService,
     QuizService,
 )
 
-from src.healthbot.prompts.rejection import build_rejection_messages
-from src.healthbot.services.prompt_manager import PromptManager
-from src.healthbot.services.safety_service import SafetyService
+from healthbot.prompts.rejection import build_rejection_messages
+from healthbot.services.safety_service import SafetyService
 
 logger = get_logger(__name__)
 
@@ -44,7 +45,6 @@ class HealthWorkflowNodes:
         self.grading_service = QuizGradingService()
         self.explanation_service = ExplanationService(llm_provider)
         self.approval_service = QuizApprovalService()
-        self.prompt_manager = PromptManager()
         self.safety_service = SafetyService()
 
     # ENTRY POINT
@@ -90,7 +90,6 @@ class HealthWorkflowNodes:
         """
         Main LLM agent node.
         """
-
         question = state.get("question", "")
         history = state.get("messages", [])
 
@@ -105,10 +104,8 @@ class HealthWorkflowNodes:
                 messages = prompt_messages
             response = self.llm.invoke(messages)
             return {"messages": [response]}
-
         except Exception as exc:
             logger.exception("LLM execution failed")
-
             raise LLMServiceError("Agent execution failed") from exc
 
     # REJECTION NODE
@@ -176,7 +173,7 @@ class HealthWorkflowNodes:
         try:
             quiz = self.quiz_service.generate_quiz(summary)
 
-            quiz_text = f"""        
+            quiz_text = dedent(f"""        
                 {quiz['question']}
         
                 A) {quiz['option_a']}
@@ -185,7 +182,7 @@ class HealthWorkflowNodes:
                 D) {quiz['option_d']}
         
                 Reply with A, B, C, or D.
-            """
+            """).strip()
 
             logger.info("Quiz generated successfully")
 
@@ -321,11 +318,11 @@ class HealthWorkflowNodes:
         )
 
         if is_correct:
-            header = f"""
+            header = dedent(f"""
                 🎉 Correct!
                 Your answer {user_answer} is correct.
                 Score: {score}%
-            """
+            """).strip()
 
         else:
             header = f"""

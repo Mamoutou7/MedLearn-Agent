@@ -7,9 +7,9 @@ import uuid
 
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from src.healthbot.core.logging import get_logger
-from src.healthbot.observability.metrics import metrics
-from src.healthbot.observability.tracing import set_request_id
+from healthbot.core.logging import get_logger
+from healthbot.observability.metrics import metrics
+from healthbot.observability.tracing import set_request_id
 
 logger = get_logger(__name__)
 

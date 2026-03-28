@@ -11,19 +11,18 @@ Responsibilities
 """
 
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import ToolNode
-from IPython.display import Image, display
 
-from src.healthbot.infra.llm_provider import LLMProvider
-from src.healthbot.domain.models import WorkflowState
-from src.healthbot.infra.web_search_tool import web_search_tool
-from src.healthbot.workflow.nodes import HealthWorkflowNodes
-from src.healthbot.workflow.router import WorkflowRouter
-from src.healthbot.infra.checkpointing.factory import CheckpointerHandle, build_checkpointer
-from src.healthbot.core.settings import Settings, get_settings
+from healthbot.core.logging import get_logger
+from healthbot.infra.llm_provider import LLMProvider
+from healthbot.domain.models import WorkflowState
+from healthbot.infra.web_search_tool import web_search_tool
+from healthbot.workflow.nodes import HealthWorkflowNodes
+from healthbot.workflow.router import WorkflowRouter
+from healthbot.infra.checkpointing.factory import CheckpointerHandle, build_checkpointer
+from healthbot.core.settings import Settings, get_settings
 
-from src.healthbot.core.logging import get_logger
+
 
 logger = get_logger(__name__)
 
@@ -92,7 +91,7 @@ class WorkflowBuilder:
             path_map={
                 "tools": "tools",
                 "quiz_approval": "quiz_approval",
-                END: END,
+                "__end__": END,
             },
         )
 

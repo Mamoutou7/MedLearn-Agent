@@ -6,8 +6,8 @@ from typing import Iterable
 
 from langchain_core.messages import AIMessage
 
-from src.healthbot.core.logging import get_logger
-from src.healthbot.observability.metrics import metrics
+from healthbot.core.logging import get_logger
+from healthbot.observability.metrics import metrics
 
 logger = get_logger(__name__)
 

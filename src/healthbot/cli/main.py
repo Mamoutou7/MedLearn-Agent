@@ -1,7 +1,7 @@
 from langgraph.types import Command
 
-from src.healthbot.workflow.workflow_builder import WorkflowBuilder
-from src.healthbot.utils.get_interrupt_value import get_interrupt_value
+from healthbot.workflow.workflow_builder import WorkflowBuilder
+from healthbot.utils.get_interrupt_value import get_interrupt_value
 
 import warnings
 

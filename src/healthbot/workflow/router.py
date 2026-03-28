@@ -44,7 +44,7 @@ class WorkflowRouter:
         if self._should_propose_quiz(last_message, state):
             return "quiz_approval"
 
-        return "health_agent"
+        return "__end__"
 
     def validation_route(self, state) -> ValidationRoute:
         """

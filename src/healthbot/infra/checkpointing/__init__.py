@@ -1,6 +1,6 @@
 """Checkpointing helpers."""
 
-from src.healthbot.infra.checkpointing.factory import (
+from healthbot.infra.checkpointing.factory import (
     CheckpointerFactoryError,
     CheckpointerHandle,
     build_checkpointer,

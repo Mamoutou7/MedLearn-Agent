@@ -6,8 +6,8 @@ import os
 from contextlib import AbstractContextManager
 from typing import Any
 
-from src.healthbot.core.settings import Settings
-from src.healthbot.core.logging import get_logger
+from healthbot.core.settings import Settings
+from healthbot.core.logging import get_logger
 
 logger = get_logger(__name__)
 

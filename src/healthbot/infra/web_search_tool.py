@@ -3,13 +3,13 @@ from __future__ import annotations
 from urllib.parse import urlparse
 
 from langchain_core.tools import tool
-from tavily import TavilyClient
 
-from src.healthbot.core.exceptions import ToolExecutionError
-from src.healthbot.core.logging import get_logger
-from src.healthbot.core.settings import settings
-from src.healthbot.observability.metrics import metrics
-from src.healthbot.observability.tracing import trace_span
+from healthbot.core.exceptions import ToolExecutionError
+from healthbot.core.logging import get_logger
+from healthbot.core.settings import settings
+from healthbot.infra.search_provider import get_search_provider
+from healthbot.observability.metrics import metrics
+from healthbot.observability.tracing import trace_span
 
 logger = get_logger(__name__)
 
@@ -38,8 +38,12 @@ def web_search_tool(question: str) -> dict:
     try:
         with trace_span("tool.web_search"):
             metrics.increment("tool.web_search.calls")
-            client = TavilyClient(api_key=settings.tavily_api_key)
-            results = client.search(question, search_depth="advanced", max_results=8)
+            client = get_search_provider()
+            results = client.search(
+                question,
+                search_depth="advanced",
+                max_results=8,
+            )
     except Exception as exc:
         logger.exception("Web search tool failed")
         raise ToolExecutionError("Web search execution failed") from exc

@@ -2,6 +2,8 @@ from healthbot.repositories.session_repository import (
     InMemorySessionRepository,
     SessionNotFoundError,
 )
+from healthbot.repositories.sqlite_session_repository import SQLiteSessionRepository
+
 
 
 def test_in_memory_session_repository_roundtrip():
@@ -25,3 +27,13 @@ def test_in_memory_session_repository_rejects_unknown_session():
         assert False, "Expected SessionNotFoundError"
     except SessionNotFoundError:
         pass
+
+
+def test_sqlite_session_repository_roundtrip(tmp_path):
+    repo = SQLiteSessionRepository(str(tmp_path / "sessions.db"))
+
+    repo.create_session("abc")
+    repo.append_event("abc", {"type": "ask", "question": "What is flu?"})
+
+    assert repo.exists("abc") is True
+    assert repo.get_history("abc") == [{"type": "ask", "question": "What is flu?"}]
