@@ -1,7 +1,6 @@
 # Changelog
 
 All significant changes to this project will be documented here.
-
 ## [Unreleased]
 
 ### Build
@@ -24,6 +23,8 @@ All significant changes to this project will be documented here.
 - Update README with packaging, security, and runtime guidance
 
 - Refine system design with eval pipeline, safety layer, improved observability, and scalable architecture direction (architecture)
+
+- Add automatic changelog generation (changelog)
 
 - Add automatic changelog generation (changelog)
 

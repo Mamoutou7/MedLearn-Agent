@@ -2,7 +2,7 @@
 header = """
 # Changelog
 
-Tous les changements notables de ce projet seront documentés ici.
+All significant changes to this project will be documented here.
 """
 
 body = """
