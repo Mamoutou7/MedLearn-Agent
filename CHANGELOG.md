@@ -5,193 +5,190 @@ All significant changes to this project will be documented here.
 
 ### Build
 
-- Add redis, postegres and langgraph-checkpoint-sqlite dependencies (deps)
+- add redis, postegres and langgraph-checkpoint-sqlite dependencies (deps)
 
-- Package project properly and fix script entrypoints
+- package project properly and fix script entrypoints
 
 
 ### Documentation
 
-- Update README with persistence, prompt registry, safety, and observability improvements
+- update README with persistence, prompt registry, safety, and observability improvements
 
-- Document prompt evaluation and regression workflow
+- document prompt evaluation and regression workflow
 
-- Codebase repository structure updated
+- codebase repository structure updated
 
-- Update README with packaging, security, and runtime guidance
+- update README with packaging, security, and runtime guidance
 
-- Update README with packaging, security, and runtime guidance
+- update README with packaging, security, and runtime guidance
 
-- Refine system design with eval pipeline, safety layer, improved observability, and scalable architecture direction (architecture)
+- refine system design with eval pipeline, safety layer, improved observability, and scalable architecture direction (architecture)
 
-- Add automatic changelog generation (changelog)
+- add automatic changelog generation (changelog)
 
-- Add automatic changelog generation (changelog)
+- add automatic changelog generation (changelog)
+
+- add automatic changelog generation (changelog)
 
 
-### Fonctionnalités
+### Features
 
-- Add model name configuration (config)
+- add model name configuration (config)
 
-- Add implementation in llm_provider (llm)
+- add implementation in llm_provider (llm)
 
-- Add models representing workflow implementation (models)
+- add models representing workflow implementation (models)
 
-- Add tavily web search implementation (tools)
+- add tavily web search implementation (tools)
 
-- Add health topic validator implementation (services)
+- add health topic validator implementation (services)
 
-- Add quiz service implementation (services)
+- add quiz service implementation (services)
 
-- Update health topic validator implementation (services)
+- update health topic validator implementation (services)
 
-- Update quiz service implementation (services)
+- update quiz service implementation (services)
 
 - Add agent running implementation (scripts)
 
 - Add exceptions, logging implementation (core)
 
-- Add requirement file (requirement)
+- add requirement file (requirement)
 
-- Update requirement file
+- update requirement file
 
-- Update readme file
+- update readme file
 
-- Add bash automated flow file
+- add bash automated flow file
 
-- Update architecture file
+- update architecture file
 
-- Update readme file (readme)
+- update readme file (readme)
 
-- Update architecture file (architecture)
+- update architecture file (architecture)
 
 - Centralize prompts, add base, registry and safety rules (prompts)
 
-- Update gitignore file (git)
+- update gitignore file (git)
 
-- Update quiz models (domain)
+- update quiz models (domain)
 
-- Close session and checkpoint resources gracefully on shutdown (app)
+- close session and checkpoint resources gracefully on shutdown (app)
 
-- Add configurable LangGraph checkpointer factory (checkpoint)
+- add configurable LangGraph checkpointer factory (checkpoint)
 
-- Add session and checkpoint backend environment settings (config)
+- add session and checkpoint backend environment settings (config)
 
-- Add checkpoint exceptions (exception)
+- add checkpoint exceptions (exception)
 
-- Add checkpoint exceptions (exception)
+- add checkpoint exceptions (exception)
 
-- Persist agent sessions in Redis (session)
+- persist agent sessions in Redis (session)
 
-- Persist user sessions in Redis via repository abstraction (session)
+- persist user sessions in Redis via repository abstraction (session)
 
-- Add SQLite-backed session persistence (session)
+- add SQLite-backed session persistence (session)
 
-- Add gauges, span ids, and Prometheus metrics endpoint (observability)
+- add gauges, span ids, and Prometheus metrics endpoint (observability)
 
-- Improve grounding, source quality, and medical red-flag handling (safety)
+- improve grounding, source quality, and medical red-flag handling (safety)
 
-- Add prompt evaluation models, scoring rubric, and dataset runner (evals)
+- add prompt evaluation models, scoring rubric, and dataset runner (evals)
+
+- align API routes, tests, and workflow behavior (api)
 
 
 ### Maintenance
 
-- Initialize chatbot project structure
+- initialize chatbot project structure
 
-- Update configuration settings (config)
+- update configuration settings (config)
 
-- Update configuration settings (config)
+- update configuration settings (config)
 
-- Update configuration settings (config)
+- update configuration settings (config)
 
-- Remove repositories directory
+- remove repositories directory
+
+
+### Others changes
+
+- Initial commit
+
+- update gitignore file
+
+- facilitate modules importation
+
+- add session backend fallback settings and local Redis default
+
+- add SessionBackendUnavailableError for session storage failures
+
+- wrap Redis client failures in session repository errors
+
+- fallback to in-memory session repository when Redis is unavailable
+
+- translate session repository failures into service-level backend errors
+
+- return structured JSON responses for domain and unexpected errors
+
+- improve request logging for failed and completed HTTP calls
 
 
 ### Performances
 
-- Aggregate timer stats instead of storing all samples in memory (metrics)
+- aggregate timer stats instead of storing all samples in memory (metrics)
 
 
 ### Refactoring
 
 - Main script refactorized (cli)
 
-- Improve explanation_service, health_validator and quiz_service implementation (services)
+- improve explanation_service, health_validator and quiz_service implementation (services)
 
-- Externalize health-topic classification prompt (validator)
+- externalize health-topic classification prompt (validator)
 
-- Centralize quiz generation and explanation prompts (quiz)
+- centralize quiz generation and explanation prompts (quiz)
 
-- Centralize quiz generation and explanation prompts (quiz)
+- centralize quiz generation and explanation prompts (quiz)
 
-- Move HealthBot agent and welcome prompts out of nodes (workflow)
+- move HealthBot agent and welcome prompts out of nodes (workflow)
 
-- Wire session and checkpoint backends through dependency injection (api)
+- wire session and checkpoint backends through dependency injection (api)
 
-- Introduce repository-based session storage (session)
+- introduce repository-based session storage (session)
 
-- Remove hardcoded MemorySaver from WorkflowBuilder (workflow)
+- remove hardcoded MemorySaver from WorkflowBuilder (workflow)
 
-- Centralize rejection prompt and prompt rendering (prompts)
+- centralize rejection prompt and prompt rendering (prompts)
 
-- Standardize package imports across source and tests
+- standardize package imports across source and tests
+
+- reorganize test suite into e2e, integration, unit, and regression layers (tests)
 
 
 ### Tests
 
 - Add units tests (tests)
 
-- Add coverage for Redis and in-memory session repositories (session)
+- add coverage for Redis and in-memory session repositories (session)
 
-- Add coverage for quiz generation flow (quiz)
+- add coverage for quiz generation flow (quiz)
 
-- Add coverage for quiz approval workflow (quiz)
+- add coverage for quiz approval workflow (quiz)
 
-- Add coverage for quiz grading workflow (quiz)
+- add coverage for quiz grading workflow (quiz)
 
-- Add unit tests for quiz service behavior (quiz)
+- add unit tests for quiz service behavior (quiz)
 
-- Add unit tests for health topic validation (validation)
+- add unit tests for health topic validation (validation)
 
-- Add regression tests for LangGraph workflow execution (workflow)
+- add regression tests for LangGraph workflow execution (workflow)
 
-- Add prompt and safety regression coverage (regression)
+- add prompt and safety regression coverage (regression)
 
-- Cover session persistence and foreign key enforcement (sqlite)
+- cover session persistence and foreign key enforcement (sqlite)
 
-- Cover shared Tavily provider and curated web search behavior (search)
-
-
-### api
-
-- Fallback to in-memory session repository when Redis is unavailable
-
-- Return structured JSON responses for domain and unexpected errors
-
-
-### config
-
-- Add session backend fallback settings and local Redis default
-
-
-### core
-
-- Add SessionBackendUnavailableError for session storage failures
-
-
-### middleware
-
-- Improve request logging for failed and completed HTTP calls
-
-
-### repo
-
-- Wrap Redis client failures in session repository errors
-
-
-### service
-
-- Translate session repository failures into service-level backend errors
+- cover shared Tavily provider and curated web search behavior (search)
 
 
 
