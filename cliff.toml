@@ -35,12 +35,12 @@ topo_order = false
 sort_commits = "oldest"
 count_tags = false
 use_branch_tags = false
-skip_tags = "v0.1.0-beta.1"
+skip_tags = "v0.1.0"
 
 commit_preprocessors = []
 
 commit_parsers = [
-  { message = "^feat", group = "Fonctionnalités" },
+  { message = "^feat", group = "Features" },
   { message = "^fix", group = "Corrections" },
   { message = "^perf", group = "Performances" },
   { message = "^refactor", group = "Refactoring" },
@@ -48,5 +48,5 @@ commit_parsers = [
   { message = "^test", group = "Tests" },
   { message = "^build", group = "Build" },
   { message = "^ci", group = "CI/CD" },
-  { message = "^chore", group = "Maintenance" },
+  { message = "^chore", group = "Maintainance" },
 ]

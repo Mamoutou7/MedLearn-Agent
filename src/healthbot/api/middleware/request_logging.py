@@ -44,7 +44,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         metrics.observe("http.request.duration_ms", duration_ms)
 
         logger.info(
-            "HTTP request processed | request_id=%s | method=%s | path=%s | status_code=%s | duration_ms=%.2f",
+            "HTTP request processed | request_id=%s | "
+            "method=%s | path=%s | status_code=%s | duration_ms=%.2f",
             request_id,
             request.method,
             request.url.path,

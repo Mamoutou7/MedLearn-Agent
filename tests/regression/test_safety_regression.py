@@ -14,7 +14,8 @@ def test_minimum_prompt_quality_threshold():
                 expected_keywords=["blood pressure"],
                 must_include_disclaimer=True,
             ),
-            "Hypertension means high blood pressure. This is general educational information and is not a diagnosis.",
+            "Hypertension means high blood pressure. "
+            "This is general educational information and is not a diagnosis.",
         ),
         (
             EvalCase(

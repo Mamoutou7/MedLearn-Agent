@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import Dict
-
+from healthbot.core.exceptions import QuizGenerationError, QuizGradingError
+from healthbot.core.logging import get_logger
 from healthbot.domain.quiz_models import QuizQuestion
 from healthbot.infra.llm_provider import LLMProvider
-from healthbot.prompts.quiz_generation import build_quiz_generation_messages
-from healthbot.core.logging import get_logger
-from healthbot.core.exceptions import QuizGradingError, QuizGenerationError
 from healthbot.observability.metrics import metrics
 from healthbot.observability.tracing import trace_span
+from healthbot.prompts.quiz_generation import build_quiz_generation_messages
 
 logger = get_logger(__name__)
 
@@ -87,7 +85,7 @@ class QuizGradingService:
         logger.debug(f"Validating answer: {answer}")
         return answer.upper() in self.VALID_ANSWERS
 
-    def grade(self, user_answer: str, correct_answer: str) -> Dict:
+    def grade(self, user_answer: str, correct_answer: str) -> dict:
         """
         Grade the quiz answer.
 

@@ -32,8 +32,12 @@ class FakeSearchProvider:
 
 
 def test_web_search_tool_prioritizes_trusted_domains():
-    with patch("healthbot.infra.web_search_tool.get_search_provider", return_value=FakeSearchProvider()):
-        result = web_search_tool.invoke({"question": "iron deficiency anemia symptoms"})
+    with patch("healthbot.infra.web_search_tool.get_search_provider",
+               return_value=FakeSearchProvider()
+               ):
+        result = web_search_tool.invoke(
+            {"question": "iron deficiency anemia symptoms"}
+        )
 
     assert result["query"] == "iron deficiency anemia symptoms"
     assert len(result["results"]) >= 1
@@ -48,8 +52,12 @@ def test_web_search_tool_prioritizes_trusted_domains():
 
 
 def test_web_search_tool_enriches_results_with_domain_and_trust_flag():
-    with patch("healthbot.infra.web_search_tool.get_search_provider", return_value=FakeSearchProvider()):
-        result = web_search_tool.invoke({"question": "measles prevention"})
+    with patch("healthbot.infra.web_search_tool.get_search_provider",
+               return_value=FakeSearchProvider()
+               ):
+        result = web_search_tool.invoke(
+            {"question": "measles prevention"}
+        )
 
     domains = [item["domain"] for item in result["results"]]
     trust_flags = [item["trusted_source"] for item in result["results"]]

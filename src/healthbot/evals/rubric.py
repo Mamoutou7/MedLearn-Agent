@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from healthbot.evals.models import EvalCase, EvalScore
 
-
 DISCLAIMER_HINTS = [
     "not a diagnosis",
     "general educational information",

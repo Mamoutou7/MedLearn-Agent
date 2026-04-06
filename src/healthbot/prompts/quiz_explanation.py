@@ -7,7 +7,6 @@ from healthbot.prompts.safety import (
     compose_system_prompt,
 )
 
-
 QUIZ_EXPLANATION_PROMPT = PromptSpec(
     name="quiz_explanation",
     version="v1",

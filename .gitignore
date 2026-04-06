@@ -62,6 +62,11 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 .data
+.idea
+.python-version
+src/healthbot/.DS_store
+tests/.DS_Store
+src/.DS_Store
 
 # Flask stuff:
 instance/
@@ -207,3 +212,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+.env
+.DS_Store
+.idea/
+.python-version

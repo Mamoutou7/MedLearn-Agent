@@ -1,5 +1,5 @@
-from healthbot.core.logging import configure_logging
 from healthbot.cli.main import human_in_the_loop
+from healthbot.core.logging import configure_logging
 
 configure_logging()
 

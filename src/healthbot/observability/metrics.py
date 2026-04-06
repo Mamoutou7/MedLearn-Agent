@@ -1,10 +1,9 @@
-"""Lightweight in-process metrics registry for the API and agent workflow."""
+"""Lightweight in-process metrics registry for the API and agent e2e."""
 from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
 from threading import Lock
-from typing import Dict
 
 
 @dataclass
@@ -46,7 +45,7 @@ class MetricsRegistry:
         with self._lock:
             self._gauges[name] = value
 
-    def snapshot(self) -> Dict[str, Dict[str, float | int]]:
+    def snapshot(self) -> dict[str, dict[str, float | int]]:
         with self._lock:
             timers = {
                 name: {

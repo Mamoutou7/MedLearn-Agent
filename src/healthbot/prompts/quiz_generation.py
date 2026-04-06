@@ -7,7 +7,6 @@ from healthbot.prompts.safety import (
     compose_system_prompt,
 )
 
-
 QUIZ_GENERATION_PROMPT = PromptSpec(
     name="quiz_generation",
     version="v1",

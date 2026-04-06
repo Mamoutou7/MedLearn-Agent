@@ -1,4 +1,3 @@
-import pytest
 from healthbot.services.quiz_service import QuizApprovalService
 
 

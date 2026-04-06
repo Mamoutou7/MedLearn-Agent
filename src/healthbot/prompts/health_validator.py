@@ -3,7 +3,6 @@ from __future__ import annotations
 from healthbot.prompts.base import PromptSpec, build_chat_prompt
 from healthbot.prompts.safety import compose_system_prompt
 
-
 HEALTH_VALIDATOR_PROMPT = PromptSpec(
     name="health_validator",
     version="v1",

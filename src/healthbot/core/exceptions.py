@@ -4,15 +4,13 @@ Custom exceptions used across the HealthBot application.
 
 from __future__ import annotations
 
-from typing import Optional
-
 
 class HealthBotError(Exception):
     """Base exception class for all HealthBot related errors."""
 
     status_code = 400
 
-    def __init__(self, message: str, context: Optional[dict] = None):
+    def __init__(self, message: str, context: dict | None = None):
         super().__init__(message)
         self.context = context or {}
 
@@ -38,7 +36,7 @@ class ToolExecutionError(HealthBotError):
 
 
 class WorkflowError(HealthBotError):
-    """Raised when the LangGraph workflow encounters an invalid state."""
+    """Raised when the LangGraph e2e encounters an invalid state."""
     status_code = 400
 
 

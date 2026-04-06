@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from langchain_core.messages import AIMessage
 
-from healthbot.infra.llm_provider import LLMProvider
 from healthbot.core.logging import get_logger
+from healthbot.infra.llm_provider import LLMProvider
 from healthbot.observability.metrics import metrics
 from healthbot.observability.tracing import trace_span
 from healthbot.prompts.health_validator import build_health_validator_messages

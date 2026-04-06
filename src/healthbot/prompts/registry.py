@@ -6,10 +6,9 @@ from healthbot.prompts.health_agent import (
     WELCOME_PROMPT,
 )
 from healthbot.prompts.health_validator import HEALTH_VALIDATOR_PROMPT
-from healthbot.prompts.quiz_generation import QUIZ_GENERATION_PROMPT
 from healthbot.prompts.quiz_explanation import QUIZ_EXPLANATION_PROMPT
+from healthbot.prompts.quiz_generation import QUIZ_GENERATION_PROMPT
 from healthbot.prompts.rejection import REJECTION_PROMPT
-
 
 PROMPT_REGISTRY: dict[str, PromptSpec] = {
     HEALTH_VALIDATOR_PROMPT.name: HEALTH_VALIDATOR_PROMPT,

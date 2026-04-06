@@ -3,7 +3,6 @@ from __future__ import annotations
 from healthbot.prompts.base import PromptSpec, build_chat_prompt
 from healthbot.prompts.safety import compose_system_prompt
 
-
 REJECTION_PROMPT = PromptSpec(
     name="topic_rejection",
     version="v1",

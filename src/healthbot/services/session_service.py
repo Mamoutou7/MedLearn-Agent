@@ -3,18 +3,17 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 from langgraph.types import Command
 
-from healthbot.core.logging import get_logger
-from healthbot.core.settings import Settings, get_settings
-from healthbot.observability.metrics import metrics
-from healthbot.observability.tracing import trace_span
 from healthbot.core.exceptions import (
     SessionBackendUnavailableError,
     WorkflowError,
 )
+from healthbot.core.logging import get_logger
+from healthbot.core.settings import Settings, get_settings
+from healthbot.observability.metrics import metrics
+from healthbot.observability.tracing import trace_span
 from healthbot.repositories.session_repository import (
     InMemorySessionRepository,
     SessionNotFoundError,
@@ -100,7 +99,7 @@ class SessionService:
             return payload
 
     def approve_quiz(self, session_id: str, approved: bool) -> dict:
-        """Resume the workflow after the quiz approval interrupt."""
+        """Resume the e2e after the quiz approval interrupt."""
         self.ensure_session(session_id)
         resume_value = "approve" if approved else "reject"
         with trace_span(
@@ -120,7 +119,7 @@ class SessionService:
             return payload
 
     def submit_quiz_answer(self, session_id: str, answer: str) -> dict:
-        """Resume the workflow after the quiz answer interrupt."""
+        """Resume the e2e after the quiz answer interrupt."""
         self.ensure_session(session_id)
         with trace_span("session.quiz_answer", session_id=session_id):
             result = self._graph.invoke(
@@ -153,7 +152,7 @@ class SessionService:
             ) from exc
 
     def close(self) -> None:
-        """Release repository and workflow resources."""
+        """Release repository and e2e resources."""
         self._session_repository.close()
         self._workflow_builder.close()
 
@@ -190,10 +189,10 @@ class SessionService:
         Normalize LangGraph output into an API-friendly payload.
 
         Rules:
-        - If the workflow is interrupted, `answer` must stay None because there
+        - If the e2e is interrupted, `answer` must stay None because there
           is no final answer yet.
         - Intermediate content should be exposed in `summary` or `quiz_question`.
-        - If the workflow is completed, return the most useful final content,
+        - If the e2e is completed, return the most useful final content,
           not the generic closing message.
         """
         if "__interrupt__" in result:
@@ -235,7 +234,7 @@ class SessionService:
         """
         Extract the most useful final message for API consumers.
 
-        If the workflow ends with a generic closing message like
+        If the e2e ends with a generic closing message like
         'Thanks for using HealthBot!', return the previous meaningful
         assistant message instead.
         """

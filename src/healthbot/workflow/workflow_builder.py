@@ -1,43 +1,41 @@
 """
 This module is responsible for constructing and compiling
-the LangGraph workflow used by the HealthBot application.
+the LangGraph e2e used by the HealthBot application.
 
 Responsibilities
 ----------------
-- Register workflow nodes
+- Register e2e nodes
 - Define routing logic
 - Configure graph transitions
 - Compile the LangGraph state machine
 """
 
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 
 from healthbot.core.logging import get_logger
-from healthbot.infra.llm_provider import LLMProvider
+from healthbot.core.settings import Settings, get_settings
 from healthbot.domain.models import WorkflowState
+from healthbot.infra.checkpointing.factory import CheckpointerHandle, build_checkpointer
+from healthbot.infra.llm_provider import LLMProvider
 from healthbot.infra.web_search_tool import web_search_tool
 from healthbot.workflow.nodes import HealthWorkflowNodes
 from healthbot.workflow.router import WorkflowRouter
-from healthbot.infra.checkpointing.factory import CheckpointerHandle, build_checkpointer
-from healthbot.core.settings import Settings, get_settings
-
-
 
 logger = get_logger(__name__)
 
 
 class WorkflowBuilder:
     """
-    Responsible for constructing the LangGraph workflow.
+    Responsible for constructing the LangGraph e2e.
 
     This class encapsulates all graph creation logic to ensure
-    a clean separation between workflow orchestration and
+    a clean separation between e2e orchestration and
     application logic.
     """
 
     def __init__(self, settings: Settings | None = None):
-        """Initialize the workflow builder."""
+        """Initialize the e2e builder."""
         self.settings = settings or get_settings()
         self.checkpointer_handle: CheckpointerHandle = build_checkpointer(self.settings)
         self.nodes = HealthWorkflowNodes(LLMProvider())
@@ -45,15 +43,15 @@ class WorkflowBuilder:
 
     def build(self):
         """
-        Build and compile the HealthBot workflow graph.
+        Build and compile the HealthBot e2e graph.
 
         Returns
         -------
         CompiledStateGraph
-            Executable LangGraph workflow.
+            Executable LangGraph e2e.
         """
 
-        logger.info("Building HealthBot workflow")
+        logger.info("Building HealthBot e2e")
 
         workflow = StateGraph(WorkflowState)
 
@@ -106,7 +104,7 @@ class WorkflowBuilder:
         workflow.add_edge("end_workflow", END)
 
         # Compile Graph
-        logger.info("Compiling HealthBot workflow")
+        logger.info("Compiling HealthBot e2e")
 
         graph = workflow.compile(checkpointer=self.checkpointer_handle.resource)
 
@@ -117,7 +115,7 @@ class WorkflowBuilder:
     # GRAPH VISUALIZATION
     def visualize(self):
         """
-        Generate a PNG visualization of the LangGraph workflow.
+        Generate a PNG visualization of the LangGraph e2e.
         """
         graph = self.build()
         graph_png = graph.get_graph().draw_mermaid_png()

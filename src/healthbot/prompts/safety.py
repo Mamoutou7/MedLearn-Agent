@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 GLOBAL_MEDICAL_SAFETY_RULES = """
 You are a health education assistant, not a doctor.
 

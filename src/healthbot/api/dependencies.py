@@ -12,8 +12,8 @@ from healthbot.repositories.session_repository import (
     SessionRepository,
     SessionRepositoryError,
 )
-from src.healthbot.repositories.sqlite_session_repository import SQLiteSessionRepository
-from src.healthbot.services.session_service import SessionService
+from healthbot.repositories.sqlite_session_repository import SQLiteSessionRepository
+from healthbot.services.session_service import SessionService
 
 logger = get_logger(__name__)
 
@@ -41,12 +41,15 @@ def get_session_repository() -> SessionRepository:
                 key_prefix=settings.redis_key_prefix,
             )
             repository.ping()
-            logger.info("Using Redis session repository | redis_url=%s", settings.redis_url)
+            logger.info("Using Redis session repository | redis_url=%s",
+                        settings.redis_url
+                        )
             return repository
         except SessionRepositoryError as exc:
             if settings.session_backend_fallback_enabled:
                 logger.warning(
-                    "Redis unavailable, falling back to in-memory session repository | redis_url=%s | reason=%s",
+                    "Redis unavailable, falling back to in-memory "
+                    "session repository | redis_url=%s | reason=%s",
                     settings.redis_url,
                     exc,
                 )
@@ -59,4 +62,6 @@ def get_session_repository() -> SessionRepository:
 @lru_cache(maxsize=1)
 def get_session_service() -> SessionService:
     """Return the session service singleton."""
-    return SessionService(session_repository=get_session_repository(), settings=settings)
+    return SessionService(session_repository=get_session_repository(),
+                          settings=settings
+                          )

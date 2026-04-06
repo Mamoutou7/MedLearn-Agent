@@ -141,7 +141,9 @@ class SQLiteSessionRepository:
                 ).fetchall()
             return [self._serializer.loads(str(row[0])) for row in rows]
         except sqlite3.Error as exc:
-            raise SessionRepositoryError(f"Failed to load history for {session_id!r}: {exc}") from exc
+            raise SessionRepositoryError(
+                f"Failed to load history for {session_id!r}: {exc}"
+            ) from exc
 
     def ping(self) -> bool:
         try:

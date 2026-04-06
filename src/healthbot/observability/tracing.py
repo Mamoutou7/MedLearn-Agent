@@ -1,8 +1,8 @@
 import time
 import uuid
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Generator
 
 from healthbot.core.logging import get_logger
 from healthbot.observability.metrics import metrics
@@ -21,7 +21,7 @@ def get_request_id() -> str | None:
 
 
 @contextmanager
-def trace_span(name: str, **metadata) -> Generator[None, None, None]:
+def trace_span(name: str, **metadata) -> Generator[None]:
     start = time.perf_counter()
     request_id = get_request_id()
     span_id = uuid.uuid4().hex[:12]

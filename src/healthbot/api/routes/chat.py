@@ -42,6 +42,6 @@ async def chat(
     payload: ChatRequest,
     session_service: SessionService = Depends(get_session_service),
 ):
-    """Send a user question to the HealthBot workflow."""
+    """Send a user question to the HealthBot e2e."""
     result = session_service.ask(payload.session_id, payload.question)
     return ChatResponse(**result)

@@ -15,17 +15,13 @@ Responsibilities
 
 from __future__ import annotations
 
-from typing import Dict
-
-from langchain_core.prompts import ChatPromptTemplate
-
+from healthbot.core.exceptions import LLMServiceError
+from healthbot.core.logging import get_logger
 from healthbot.domain.quiz_models import QuizExplanation
 from healthbot.infra.llm_provider import LLMProvider
-from healthbot.prompts.quiz_explanation import build_quiz_explanation_messages
-from healthbot.core.logging import get_logger
-from healthbot.core.exceptions import LLMServiceError
 from healthbot.observability.metrics import metrics
 from healthbot.observability.tracing import trace_span
+from healthbot.prompts.quiz_explanation import build_quiz_explanation_messages
 
 logger = get_logger(__name__)
 
@@ -56,7 +52,7 @@ class ExplanationService:
         correct_answer: str,
         is_correct: bool,
         summary: str,
-    ) -> Dict:
+    ) -> dict:
         """
         Generate a structured explanation for a quiz answer.
 

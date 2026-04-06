@@ -18,7 +18,7 @@ async def submit_quiz_approval(
     payload: QuizApprovalRequest,
     session_service: SessionService = Depends(get_session_service),
 ):
-    """Resume the workflow after the user approves or rejects the quiz."""
+    """Resume the e2e after the user approves or rejects the quiz."""
     result = session_service.approve_quiz(payload.session_id, payload.approved)
     return QuizWorkflowResponse(**result)
 
@@ -28,7 +28,7 @@ async def submit_quiz_answer(
     payload: QuizAnswerRequest,
     session_service: SessionService = Depends(get_session_service),
 ):
-    """Resume the workflow after the user submits the quiz answer."""
+    """Resume the e2e after the user submits the quiz answer."""
     result = session_service.submit_quiz_answer(
         payload.session_id, payload.answer.upper()
     )

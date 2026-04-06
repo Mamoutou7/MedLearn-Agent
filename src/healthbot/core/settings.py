@@ -7,7 +7,7 @@ Centralizes environment loading for CLI, API and infrastructure.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import List, Literal
+from typing import Literal
 
 from dotenv import load_dotenv
 from pydantic import Field, field_validator
@@ -122,7 +122,7 @@ class Settings(BaseSettings):
         return value.rstrip("/") if value else None
 
     @property
-    def allowed_origins(self) -> List[str]:
+    def allowed_origins(self) -> list[str]:
         """Return allowed CORS origins as a parsed list."""
         raw = self.allowed_origins_raw.strip()
         if raw == "*":
@@ -130,7 +130,7 @@ class Settings(BaseSettings):
         return [item.strip() for item in raw.split(",") if item.strip()]
 
     @property
-    def trusted_health_domains(self) -> List[str]:
+    def trusted_health_domains(self) -> list[str]:
         """Return trusted health domains as a normalized list."""
         return [
             item.strip().lower()

@@ -6,7 +6,6 @@ import logging
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Optional
 
 from healthbot.core.settings import settings
 
@@ -45,6 +44,6 @@ def configure_logging(level: int | None = None) -> None:
     configure_logging._configured = True
 
 
-def get_logger(name: Optional[str] = None) -> logging.Logger:
+def get_logger(name: str | None = None) -> logging.Logger:
     """Return a logger configured via ``configure_logging``."""
     return logging.getLogger(name)

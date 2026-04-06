@@ -1,15 +1,101 @@
+[project]
+name = "medlearn-agent"
+version = "0.1.0"
+description = "Modular AI health education assistant"
+readme = "README.md"
+requires-python = ">=3.13"
+license = {text = "MIT"}
+
+authors = [
+    {name = "Mamoutou Fofana", email = "mamoutoufofanan@yahoo.fr"}   # ← À personnaliser
+]
+
+dependencies = [
+    # Core Application
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "gunicorn>=25.0.0",
+
+    # Pydantic & Settings
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "python-dotenv>=1.0.0",
+    "python-json-logger>=3.0.0",
+
+    # LangChain / LangGraph Ecosystem
+    "langgraph>=1.1.0",
+    "langgraph-checkpoint>=4.0.0",
+    "langgraph-checkpoint-sqlite>=3.0.0",
+    "langchain-core>=1.2.0",
+    "langchain-openai>=1.1.0",
+    "langchain>=1.2.0",
+
+    # LLM & Tools
+    "openai>=2.24.0",
+    "tavily-python>=0.7.0",
+    "httpx>=0.28.0",
+    "tenacity>=9.0.0",
+
+    # Storage
+    "redis>=7.0.0",
+]
+
+# Groups uv
+[dependency-groups]
+dev = [
+    # Tests
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=6.0.0",
+
+    # Formatting / Linting
+    "ruff>=0.9.0",
+    "black>=26.0.0",
+
+    # Others dev tools
+    "ipython>=8.0.0",
+    "pre-commit>=4.0.0",
+    "mypy>=1.15.0",
+]
+
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
-
-[project]
-name = "healthbot"
-version = "0.1.0"
-description = "MedLearn Agent"
-requires-python = ">=3.11"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["healthbot*"]
+exclude = ["tests*", "scripts*"]
+
+# Ruff configuration
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "C4", "UP", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/healthbot/api/routes/*.py" = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]

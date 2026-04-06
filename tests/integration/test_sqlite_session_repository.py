@@ -16,7 +16,7 @@ def test_create_session_and_exists(tmp_path: Path):
 
     assert repository.exists("session-1") is True
     assert repository.exists("missing-session") is False
-
+    repository.close()
 
 def test_append_event_and_get_history(tmp_path: Path):
     db_path = tmp_path / "sessions.db"
@@ -34,6 +34,7 @@ def test_append_event_and_get_history(tmp_path: Path):
     assert history[1]["role"] == "assistant"
     assert history[1]["content"] == "Hi there"
 
+    repository.close()
 
 def test_append_event_raises_for_missing_session(tmp_path: Path):
     db_path = tmp_path / "sessions.db"

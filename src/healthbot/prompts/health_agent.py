@@ -1,12 +1,11 @@
 from __future__ import annotations
 
+from healthbot.core.logging import get_logger
 from healthbot.prompts.base import PromptSpec, build_chat_prompt
 from healthbot.prompts.safety import (
     GLOBAL_MEDICAL_SAFETY_RULES,
     compose_system_prompt,
 )
-from healthbot.core.logging import get_logger
-
 
 logger = get_logger(__name__)
 
@@ -30,7 +29,8 @@ Behavior rules:
 - Separate established facts from uncertainty.
 - Focus on education, not diagnosis.
 - When possible, include practical next steps the user can discuss with a clinician.
-- If web_search_tool is available, use it when recency, source verification, or medical evidence matters.
+- If web_search_tool is available, use it when recency, source verification,
+    or medical evidence matters.
 - Prefer high-quality medical or public-health sources when tools are used.
 - Distinguish clearly between established facts, uncertainty, and urgent red flags.
 - When using retrieved evidence, mention the source organizations or domains in the answer.

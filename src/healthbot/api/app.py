@@ -37,7 +37,7 @@ if settings.is_production and settings.allowed_origins == ["*"]:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
-    allow_credentials=False if settings.allowed_origins == ["*"] else True,
+    allow_credentials=settings.allowed_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

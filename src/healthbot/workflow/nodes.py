@@ -2,9 +2,8 @@
 Workflow nodes used by the LangGraph state machine.
 """
 
-from typing import Dict, Literal
 from textwrap import dedent
-
+from typing import Literal
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.types import Command, interrupt
@@ -17,6 +16,7 @@ from healthbot.prompts.health_agent import (
     build_health_agent_messages,
     build_welcome_messages,
 )
+from healthbot.prompts.rejection import build_rejection_messages
 from healthbot.services.explanation_service import ExplanationService
 from healthbot.services.health_validator import HealthValidator
 from healthbot.services.quiz_service import (
@@ -24,8 +24,6 @@ from healthbot.services.quiz_service import (
     QuizGradingService,
     QuizService,
 )
-
-from healthbot.prompts.rejection import build_rejection_messages
 from healthbot.services.safety_service import SafetyService
 
 logger = get_logger(__name__)
@@ -33,7 +31,7 @@ logger = get_logger(__name__)
 
 class HealthWorkflowNodes:
     """
-    Collection of workflow nodes used in the LangGraph state machine.
+    Collection of e2e nodes used in the LangGraph state machine.
     Each node is a method of this class.
     """
 
@@ -48,9 +46,9 @@ class HealthWorkflowNodes:
         self.safety_service = SafetyService()
 
     # ENTRY POINT
-    def entry_point(self, state: WorkflowState) -> Dict:
+    def entry_point(self, state: WorkflowState) -> dict:
         """
-        Entry point of the workflow.
+        Entry point of the e2e.
         """
         question = state.get("question", "")
         logger.info("Starting new HealthBot session")
@@ -58,13 +56,15 @@ class HealthWorkflowNodes:
         return {
             "messages": [
                 *build_welcome_messages(question=question),
-                SystemMessage(content="Answer the user's health question clearly and safely."),
+                SystemMessage(
+                    content="Answer the user's health question clearly and safely."
+                ),
                 HumanMessage(content=question),
             ]
         }
 
     # VALIDATION NODE
-    def health_validation_node(self, state: WorkflowState) -> Dict:
+    def health_validation_node(self, state: WorkflowState) -> dict:
         """
         Validate health question.
         """
@@ -86,7 +86,7 @@ class HealthWorkflowNodes:
             ) from exc
 
     # AGENT NODE
-    def health_agent(self, state: WorkflowState) -> Dict:
+    def health_agent(self, state: WorkflowState) -> dict:
         """
         Main LLM agent node.
         """
@@ -137,7 +137,7 @@ class HealthWorkflowNodes:
         Parameters
         ----------
         state : WorkflowState
-            Current workflow state containing the conversation history.
+            Current e2e state containing the conversation history.
 
         Returns
         -------
@@ -164,7 +164,8 @@ class HealthWorkflowNodes:
             return {
                 "messages": [
                     AIMessage(
-                        content="Sorry, I couldn't generate a quiz because no health summary was found."
+                        content="Sorry, I couldn't generate "
+                                "a quiz because no health summary was found."
                     )
                 ],
                 "quiz_generated": False,
@@ -206,7 +207,7 @@ class HealthWorkflowNodes:
         """
         Node asking the user if they want a quiz.
 
-        This node interrupts the workflow and waits for
+        This node interrupts the e2e and waits for
         user input before continuing.
 
         Parameters
@@ -249,7 +250,7 @@ class HealthWorkflowNodes:
         """
         Node responsible for collecting the user's quiz answer.
 
-        This node interrupts the workflow and waits for the
+        This node interrupts the e2e and waits for the
         user to submit an answer.
 
         Parameters
