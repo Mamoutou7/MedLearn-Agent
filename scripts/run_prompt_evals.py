@@ -1,37 +1,59 @@
 from __future__ import annotations
 
-from pathlib import Path
+import json
 
 from healthbot.evals.runner import PromptEvalRunner
 from healthbot.infra.llm_provider import LLMProvider
+from healthbot.core.config import EVAL_BASE_DIR, DEFAULT_THRESHOLD
+
+
 
 
 def main() -> None:
     llm = LLMProvider().get_model()
     runner = PromptEvalRunner(llm=llm)
 
-    dataset_path = Path("src/healthbot/evals/datasets/prompt_eval_cases.json")
+
+    dataset_path = EVAL_BASE_DIR / "src" / "healthbot" / "evals" / "datasets" / "prompt_eval_cases.json"
+    output_path = EVAL_BASE_DIR / "src" / "healthbot" / "evals" / "datasets" / "eval_results.json"
+
+
     results = runner.run_dataset(dataset_path)
 
-    print("=" * 80)
-    print("PROMPT EVALUATION RESULTS")
-    print("=" * 80)
+    payload = []
+    scores = []
 
-    total = 0.0
     for result in results:
-        total += result.score.total_score
-        print(f"[{result.case.case_id}] prompt={result.case.prompt_name}")
-        print(f"score={result.score.total_score:.3f}")
-        if result.score.notes:
-            print("notes:")
-            for note in result.score.notes:
-                print(f"  - {note}")
-        print(f"answer: {result.answer[:300]}")
-        print("-" * 80)
+        item = {
+            "case_id": result.case.case_id,
+            "prompt_name": result.case.prompt_name,
+            "answer": result.answer,
+            "score": {
+                "total_score": result.score.total_score,
+                "keyword_score": result.score.keyword_score,
+                "safety_score": result.score.safety_score,
+                "grounding_score": result.score.grounding_score,
+                "refusal_score": result.score.refusal_score,
+                "notes": result.score.notes,
+            },
+        }
+        payload.append(item)
+        scores.append(result.score.total_score)
 
-    avg = total / len(results) if results else 0.0
-    print(f"Average score: {avg:.3f}")
+    average_score = sum(scores) / len(scores) if len(scores) > 0 else 0.0
+    output = {
+        "average_score": round(average_score, 4),
+        "threshold": DEFAULT_THRESHOLD,
+        "results": payload,
+    }
 
+    output_path.write_text(json.dumps(output, indent=2), encoding="utf-8")
+
+    print(f"Average score: {average_score:.4f}")
+    print(f"Threshold: {DEFAULT_THRESHOLD:.4f}")
+    print(f"Saved results to: {output_path}")
+
+    return 0 if average_score >= DEFAULT_THRESHOLD else 1
 
 if __name__ == "__main__":
     main()
