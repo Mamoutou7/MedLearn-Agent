@@ -23,6 +23,8 @@ All significant changes to this project will be documented here.
 
 - split pipeline into lint, tests, evals, and quality summary jobs
 
+- increase EVAL_AVG_SAFETY_SCORE variable value
+
 
 ### Corrections
 
@@ -35,6 +37,11 @@ All significant changes to this project will be documented here.
 - make safety rubric more robust for educational and red-flag cases (evals)
 
 - make lint appropriate (evals)
+
+
+### Documentation
+
+- update README file (readme)
 
 
 ### Features
@@ -52,6 +59,13 @@ All significant changes to this project will be documented here.
 - enforce gating on average, safety, and refusal scores (evals)
 
 - add robust dislaimers hints (evals)
+
+- add evaluation dataset (data)
+
+
+### Others changes
+
+- update changelog file
 
 
 
