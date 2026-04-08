@@ -20,7 +20,7 @@ jobs:
     env:
       OPENAI_API_KEY: test-openai-key
       TAVILY_API_KEY: test-tavily-key
-      OPENAI_BASE_URL: https://api.openai.com/v1
+      OPENAI_BASE_URL: https://openai.vocareum.com/v1
       MODEL_NAME: gpt-4o-mini
       APP_ENV: test
       DEBUG: "false"
@@ -28,7 +28,8 @@ jobs:
       ENABLE_METRICS: "false"
       ENABLE_TRACING: "false"
       SESSION_BACKEND: memory
-      CHECKPOINT_BACKEND: memory
+      CHECKPOINT_BACKEND: sqlite
+      CHECKPOINT_SQLITE_PATH: .data/test_checkpoints.db
       SESSION_BACKEND_FALLBACK_ENABLED: "true"
       SOURCE_RESULT_LIMIT: "5"
       REDIS_URL: redis://localhost:6379/15
@@ -80,12 +81,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: |
-            coverage.xml
+          path: coverage.xml
 
   evals:
     runs-on: ubuntu-latest
     needs: test
+    if: ${{ secrets.OPENAI_API_KEY != '' }}
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -98,7 +99,8 @@ jobs:
       ENABLE_METRICS: "false"
       ENABLE_TRACING: "false"
       SESSION_BACKEND: memory
-      CHECKPOINT_BACKEND: memory
+      CHECKPOINT_BACKEND: sqlite
+      CHECKPOINT_SQLITE_PATH: .data/test_checkpoints.db
       SESSION_BACKEND_FALLBACK_ENABLED: "true"
       SOURCE_RESULT_LIMIT: "5"
       REDIS_URL: redis://localhost:6379/15
@@ -121,6 +123,15 @@ jobs:
       - name: Install package
         run: pip install -e .
 
+      - name: Check secret presence
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY is missing"
+            exit 1
+          else
+            echo "OPENAI_API_KEY is present"
+          fi
+
       - name: Run prompt evaluations
         run: python -m scripts.run_prompt_evals
 
@@ -130,3 +141,11 @@ jobs:
         with:
           name: eval-results
           path: eval_results.json
+
+  evals-skipped:
+    runs-on: ubuntu-latest
+    needs: test
+    if: ${{ secrets.OPENAI_API_KEY == '' }}
+    steps:
+      - name: Explain why evals are skipped
+        run: echo "Skipping prompt evals because OPENAI_API_KEY is not available."
