@@ -7,7 +7,6 @@ from pathlib import Path
 from healthbot.evals.runner import PromptEvalRunner
 from healthbot.infra.llm_provider import LLMProvider
 
-
 DEFAULT_THRESHOLD = float(os.getenv("EVAL_SCORE_THRESHOLD", "0.80"))
 
 
