@@ -7,7 +7,7 @@ from healthbot.evals.runner import PromptEvalRunner
 from healthbot.infra.llm_provider import LLMProvider
 
 
-def main() -> None:
+def main() -> int:
     llm = LLMProvider().get_model()
     runner = PromptEvalRunner(llm=llm)
 
@@ -56,4 +56,4 @@ def main() -> None:
     return 0 if average_score >= DEFAULT_THRESHOLD else 1
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
