@@ -145,7 +145,6 @@ jobs:
   evals-skipped:
     runs-on: ubuntu-latest
     needs: test
-    if: ${{ secrets.OPENAI_API_KEY == '' }}
     steps:
       - name: Explain why evals are skipped
         run: echo "Skipping prompt evals because OPENAI_API_KEY is not available."
