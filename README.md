@@ -32,6 +32,8 @@ It is designed to provide safe, structured, and grounded health information whil
 7. Offer a quiz
 8. Resume the workflow with quiz approval or rejection
 9. If approved, collect the answer and return graded feedback
+10. Expand evaluation datasets (edge cases, safety-critical scenarios)
+11. CI gating based on evaluation scores
 
 ## Architecture at a glance
 
@@ -90,19 +92,11 @@ MedLearn-Agent/
 - Pytest
 
 ## Installation
-
-### Clone the repository
 ```bash
 git clone <repo-url>
 cd MedLearn-Agent
-```
-### Create a virtual environment
-```bash
 python -m venv .venv
 source .venv/bin/activate
-```
-### Install dependencies (editable package)
-```bash
 pip install -e .
 ```
 
@@ -151,7 +145,7 @@ SOURCE_RESULT_LIMIT=5
 
 ### Start API
 ```bash
-uvicorn src.healthbot.api.app:app --host 0.0.0.0 --port 8000 --reload
+uvicorn healthbot.api.app:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Interactive docs:
@@ -237,13 +231,11 @@ Includes: structured evaluation datasets, scoring (safety, grounding, refusal, k
 - Redis and Postgres deployment require environment-specific setup
 - medical safety remains educational and not clinical-grade
 - source retrieval depends on external APIs and LLM behavior
-- prompt evaluation can be expanded (datasets, CI gating, LLM-as-a-judge)
+- prompt evaluation can be expanded (LLM-as-a-judge)
 - checkpointing is functional but advanced recovery strategies are still evolving
 
 ## Roadmap direction
 Futures steps:
-- expand evaluation datasets (edge cases, safety-critical scenarios)
-- add CI gating based on evaluation scores
 - introduce LLM-as-a-judge evaluation
 - integrate OpenTelemetry + Prometheus + Grafana
 - add distributed tracing
