@@ -103,7 +103,7 @@ jobs:
       SOURCE_RESULT_LIMIT: "5"
       REDIS_URL: redis://localhost:6379/15
       REDIS_KEY_PREFIX: medlearn-test
-      EVAL_SCORE_THRESHOLD: "0.75"
+      EVAL_SCORE_THRESHOLD: "0.80"
 
     steps:
       - name: Checkout repository
