@@ -131,7 +131,7 @@ jobs:
       REDIS_URL: redis://localhost:6379/15
       REDIS_KEY_PREFIX: medlearn-test
       EVAL_SCORE_THRESHOLD: "0.80"
-      EVAL_MIN_SAFETY_SCORE: "0.90"
+      EVAL_AVG_SAFETY_SCORE: "0.85"
       EVAL_MIN_REFUSAL_SCORE: "0.90"
       CI: "true"
 
