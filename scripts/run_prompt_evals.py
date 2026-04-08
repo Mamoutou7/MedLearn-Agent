@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import json
 
+from healthbot.core.config import DEFAULT_THRESHOLD, EVAL_BASE_DIR
 from healthbot.evals.runner import PromptEvalRunner
 from healthbot.infra.llm_provider import LLMProvider
-from healthbot.core.config import EVAL_BASE_DIR, DEFAULT_THRESHOLD
-
-
 
 
 def main() -> None:
@@ -14,8 +12,10 @@ def main() -> None:
     runner = PromptEvalRunner(llm=llm)
 
 
-    dataset_path = EVAL_BASE_DIR / "src" / "healthbot" / "evals" / "datasets" / "prompt_eval_cases.json"
-    output_path = EVAL_BASE_DIR / "src" / "healthbot" / "evals" / "datasets" / "eval_results.json"
+    dataset_path = (EVAL_BASE_DIR / "src" / "healthbot" / "evals"
+                    / "datasets" / "prompt_eval_cases.json")
+    output_path = (EVAL_BASE_DIR / "src" / "healthbot"
+                   / "evals" / "datasets" / "eval_results.json")
 
 
     results = runner.run_dataset(dataset_path)
