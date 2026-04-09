@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, alias="DEBUG")
     api_host: str = Field(default="0.0.0.0", alias="API_HOST")
     api_port: int = Field(default=8000, alias="API_PORT")
-    api_key: str | None = Field(default=None, alias="API_KEY")
+    api_key: str | None = Field(default="#M@mOu92", alias="API_KEY")
 
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO",
