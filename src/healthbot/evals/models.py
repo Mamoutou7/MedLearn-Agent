@@ -40,3 +40,7 @@ class EvalResult:
     case: EvalCase
     answer: str
     score: EvalScore
+    heuristic_score: float | None = None
+    judge_score: float | None = None
+    combined_score: float | None = None
+    judge_payload: dict[str, Any] | None = None
