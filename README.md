@@ -8,18 +8,25 @@ It is designed to provide safe, structured, and grounded health information whil
 
 ## What it does
 
-- answers health-related educational questions
-- validates whether a query is in scope
-- uses curated web search when the model needs external information
-- applies safety guardrails and grounding reinforcement
-- offers a resumable quiz flow with approval and answer steps
-- persists sessions across restarts with pluggable storage backends
-- supports persistent checkpointing for long-running workflows
-- centralizes prompts for easier maintenance and versioning
-- exposes the workflow through a clean FastAPI API
+- answers health-related educational questions  
+- validates whether a query is in scope  
+- uses curated web search when the model needs external information  
+- applies safety guardrails and grounding reinforcement  
+- offers a resumable quiz flow with approval and answer steps  
+- persists sessions across restarts with pluggable storage backends  
+- supports persistent checkpointing for long-running workflows  
+- centralizes prompts for easier maintenance and versioning  
+- exposes the workflow through a clean FastAPI API  
 - includes structured logging, tracing, and metrics export  
-- includes prompt evaluation and regression testing  
 
+### Evaluation & Quality
+
+- includes prompt evaluation and regression testing  
+- supports **heuristic scoring** (rule-based rubric)  
+- supports **LLM-as-a-judge evaluation**  
+- supports **combined scoring (heuristic + judge)**  
+- includes CI gating based on evaluation metrics  
+- expandable evaluation datasets (edge cases, safety-critical scenarios)
 
 ## Core workflow
 
@@ -32,8 +39,7 @@ It is designed to provide safe, structured, and grounded health information whil
 7. Offer a quiz
 8. Resume the workflow with quiz approval or rejection
 9. If approved, collect the answer and return graded feedback
-10. Expand evaluation datasets (edge cases, safety-critical scenarios)
-11. CI gating based on evaluation scores
+
 
 ## Architecture at a glance
 
@@ -48,7 +54,7 @@ The codebase is organized into clear layers:
 - `observability/` — metrics and tracing helpers  
 - `repositories/` — persistence backends for sessions  
 - `prompts/` — centralized prompt templates and registry  
-- `evals/` — prompt evaluation and regression datasets  
+- `evals/` — prompt evaluation, scoring, and datasets
 
 See [`docs/architecture.md`](docs/architecture.md) for the detailed design.
 
@@ -139,6 +145,13 @@ OBSERVABILITY_BACKEND=prometheus_text
 # Grounding / sources
 TRUSTED_HEALTH_DOMAINS=cdc.gov,who.int,nih.gov,medlineplus.gov,nhs.uk,mayoclinic.org
 SOURCE_RESULT_LIMIT=5
+
+# Evaluation
+ENABLE_LLM_JUDGE=true
+AVG_COMBINED_SCORE_THRESHOLD: "0.90"
+EVAL_AVG_SAFETY_SCORE=0.90
+EVAL_MIN_REFUSAL_SCORE=0.90
+AVG_GROUDING_THRESHOLD: "0.85"
 ```
 
 ## Run the application
@@ -212,6 +225,27 @@ Includes:
 
 ⚠️ This system is not a medical device and must not be used for diagnosis.
 
+## Evaluation system
+
+The project includes a production-grade evaluation pipeline:
+### Scoring types 
+- **Heuristic score** → rule-based (keywords, safety, grounding, refusal)
+- **Judge score** → LLM-based qualitative evaluation
+- **Combined score** → weighted hybrid:
+```bash
+combined = 0.6 * heuristic + 0.4 * judge
+```
+**Metrics tracked**: average score, safety score, grounding score, refusal score
+
+### CI gating
+The CI enforces:
+```bash
+average_combine_score >= threshold
+average_safety_score >= threshold
+average_min_refusal_score >= threshold
+average_grounding_score >= threshold
+```
+
 ## Testing
 ### Regression and units testing
 ```bash
@@ -228,19 +262,18 @@ Includes: structured evaluation datasets, scoring (safety, grounding, refusal, k
 
 ## Current limitations
 - observability is still lightweight compared with a full production telemetry stack 
-- Redis and Postgres deployment require environment-specific setup
+- infra setup needed for Redis/Postgres
 - medical safety remains educational and not clinical-grade
-- source retrieval depends on external APIs and LLM behavior
-- prompt evaluation can be expanded (LLM-as-a-judge)
+- grounding depends on retrieval + prompting
 - checkpointing is functional but advanced recovery strategies are still evolving
+- evaluation datasets can be expanded
 
 ## Roadmap direction
 Futures steps:
-- introduce LLM-as-a-judge evaluation
 - integrate OpenTelemetry + Prometheus + Grafana
 - add distributed tracing
 - support prompt versioning and A/B testing
-- improve grounding with structured citations
+- improved safety policies
 - strengthen medical safety policies
 - add production deployment templates (Docker, Kubernetes)
 - improve checkpoint recovery and replay capabilities
