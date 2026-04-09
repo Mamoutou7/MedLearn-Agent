@@ -92,6 +92,19 @@ class Settings(BaseSettings):
     )
     source_result_limit: int = Field(default=5, alias="SOURCE_RESULT_LIMIT")
 
+    otel_enabled: bool = Field(default=True, alias="OTEL_ENABLED")
+    otel_service_name: str = Field(default="otel", alias="OTEL_SERVICE_NAME")
+    otel_exporter_otlp_endpoint: str | None = Field(
+        default=None,
+        alias="OTEL_EXPORTER_OTLP_ENDPOINT",
+    )
+    otel_exporter_otlp_headers: str | None = Field(
+        default=None,
+        alias="OTEL_EXPORTER_OTLP_HEADERS",
+    )
+    otel_environment: str = Field(default="production", alias="OTEL_ENVIRONMENT")
+
+    
     @field_validator("redis_key_prefix")
     @classmethod
     def validate_redis_key_prefix(cls, value: str) -> str:

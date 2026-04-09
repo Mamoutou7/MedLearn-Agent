@@ -11,6 +11,8 @@ from healthbot.api.middleware.request_logging import RequestLoggingMiddleware
 from healthbot.api.routes import chat, health, quiz
 from healthbot.core.logging import configure_logging
 from healthbot.core.settings import settings
+from healthbot.observability.otel import setup_otel
+
 
 configure_logging()
 
@@ -30,6 +32,8 @@ app = FastAPI(
     description="AI health learning agent powered by LangGraph and FastAPI.",
     lifespan=lifespan,
 )
+
+setup_otel(app)
 
 if settings.is_production and settings.allowed_origins == ["*"]:
     raise ValueError("Wildcard CORS is not allowed in production")
