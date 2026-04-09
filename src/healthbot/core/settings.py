@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     tavily_api_key: str = Field(..., alias="TAVILY_API_KEY")
     openai_base_url: str | None = Field(default=None, alias="OPENAI_BASE_URL")
     model_name: str = Field(default="gpt-4o-mini", alias="MODEL_NAME")
+    judge_model_name: str = Field(default="gpt-4o-mini", alias="JUDGE_MODEL_NAME")
 
     app_name: str = Field(default="MedLearn Agent", alias="APP_NAME")
     app_env: Literal["development", "staging", "production", "test"] = Field(
