@@ -63,7 +63,10 @@ class Settings(BaseSettings):
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
     redis_key_prefix: str = Field(default="medlearn", alias="REDIS_KEY_PREFIX")
     session_ttl_seconds: int = Field(default=86400, alias="SESSION_TTL_SECONDS")
-    session_sqlite_path: str = Field(default=".data/sessions.db", alias="SESSION_SQLITE_PATH")
+    session_sqlite_path: str = Field(
+        default=".data/sessions.db",
+        alias="SESSION_SQLITE_PATH"
+    )
 
     checkpoint_backend: Literal["memory", "redis", "sqlite"] = Field(
         default="sqlite",
@@ -92,7 +95,8 @@ class Settings(BaseSettings):
     )
     source_result_limit: int = Field(default=5, alias="SOURCE_RESULT_LIMIT")
 
-    otel_enabled: bool = Field(default=True, alias="OTEL_ENABLED")
+    # OpenTelemetry
+    otel_enabled: bool = Field(default=False, alias="OTEL_ENABLED")
     otel_service_name: str = Field(default="otel", alias="OTEL_SERVICE_NAME")
     otel_exporter_otlp_endpoint: str | None = Field(
         default=None,
@@ -104,7 +108,7 @@ class Settings(BaseSettings):
     )
     otel_environment: str = Field(default="production", alias="OTEL_ENVIRONMENT")
 
-    
+
     @field_validator("redis_key_prefix")
     @classmethod
     def validate_redis_key_prefix(cls, value: str) -> str:

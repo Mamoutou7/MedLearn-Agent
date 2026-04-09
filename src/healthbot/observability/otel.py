@@ -31,12 +31,16 @@ def _parser_headers(raw: str | None) -> dict[str, str]:
     return headers
 
 def setup_otel(app: Any) -> None:
+    """Initialize OpenTelemetry tracing and instrument the web stack."""
     if not settings.otel_enabled:
         logger.info(f"OpenTelemetry disabled")
         return
 
     if not settings.otel_exporter_otlp_endpoint:
-        logger.info(f"OpenTelemetry enabled but OTLP endpoint is missing")
+        logger.warning(
+            "OpenTelemetry enabled but OTLP endpoint is missing;"
+            "instrumentation skipped"
+        )
         return
 
     resource = Resource.create(
@@ -62,6 +66,8 @@ def setup_otel(app: Any) -> None:
     HTTPXClientInstrumentor().instrument()
 
     logger.info(
-        f"OpenTelemetry initialized | service=%s | environment=%s ",
+        f"OpenTelemetry initialized | service=%s | endpoint=%s | environment=%s ",
         settings.otel_service_name,
-        settings.otel_exporter_otlp_endpoint)
+        settings.otel_exporter_otlp_endpoint,
+        settings.otel_environment,
+    )

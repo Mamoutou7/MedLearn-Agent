@@ -33,6 +33,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# OpenTelemetry bootstrap
 setup_otel(app)
 
 if settings.is_production and settings.allowed_origins == ["*"]:
