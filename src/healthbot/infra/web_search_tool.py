@@ -3,6 +3,7 @@ from __future__ import annotations
 from urllib.parse import urlparse
 
 from langchain_core.tools import tool
+from opentelemetry import trace
 
 from healthbot.core.exceptions import ToolExecutionError
 from healthbot.core.logging import get_logger
@@ -12,7 +13,7 @@ from healthbot.observability.metrics import metrics
 from healthbot.observability.tracing import trace_span
 
 logger = get_logger(__name__)
-
+tracer = trace.get_tracer(__name__)
 
 def _extract_domain(url: str | None) -> str | None:
     if not url:
@@ -35,8 +36,13 @@ def web_search_tool(question: str) -> dict:
     """Search trusted web sources for health-related evidence."""
     logger.info("Running web search tool")
 
-    try:
-        with trace_span("tool.web_search"):
+    with tracer.start_as_current_span("tool.web_search") as current_span:
+        current_span.set_attribute("tool.name", "web_search_tool")
+        current_span.set_attribute("question.length", len(question))
+        current_span.set_attribute("search.max_results", 8)
+        current_span.set_attribute("search.depth", "advanced")
+
+        try:
             metrics.increment("tool.web_search.calls")
             client = get_search_provider()
             results = client.search(
@@ -44,36 +50,45 @@ def web_search_tool(question: str) -> dict:
                 search_depth="advanced",
                 max_results=8,
             )
-    except Exception as exc:
-        logger.exception("Web search tool failed")
-        raise ToolExecutionError("Web search execution failed") from exc
+        except Exception as exc:
+            current_span.record_exception(exc)
+            current_span.set_attribute("error", True)
+            logger.exception("Web search tool failed")
+            raise ToolExecutionError("Web search execution failed") from exc
 
-    raw_results = results.get("results", [])
-    curated_results = []
+        raw_results = results.get("results", [])
+        current_span.set_attribute("search.raw_result_count", len(raw_results))
 
-    for item in raw_results:
-        domain = _extract_domain(item.get("url"))
-        curated_results.append(
-            {
-                "title": item.get("title"),
-                "url": item.get("url"),
-                "content": item.get("content"),
-                "score": item.get("score"),
-                "domain": domain,
-                "trusted_source": _is_trusted_domain(domain),
-            }
+        curated_results = []
+
+        for item in raw_results:
+            domain = _extract_domain(item.get("url"))
+            curated_results.append(
+                {
+                    "title": item.get("title"),
+                    "url": item.get("url"),
+                    "content": item.get("content"),
+                    "score": item.get("score"),
+                    "domain": domain,
+                    "trusted_source": _is_trusted_domain(domain),
+                }
+            )
+
+        curated_results.sort(
+            key=lambda item: (item["trusted_source"], item.get("score") or 0),
+            reverse=True,
         )
 
-    curated_results.sort(
-        key=lambda item: (item["trusted_source"], item.get("score") or 0),
-        reverse=True,
-    )
+        trusted_count = sum(1 for item in curated_results if item["trusted_source"])
+        returned_count = min(len(curated_results), settings.source_result_limit)
 
-    trusted_count = sum(1 for item in curated_results if item["trusted_source"])
-    metrics.set_gauge("tool.web_search.trusted_results", trusted_count)
+        metrics.set_gauge("tool.web_search.trusted_results", trusted_count)
 
-    return {
-        "query": question,
-        "results": curated_results[: settings.source_result_limit],
-        "trusted_domains_considered": settings.trusted_health_domains,
-    }
+        current_span.set_attribute("search.trusted_result_count", trusted_count)
+        current_span.set_attribute("search.returned_result_count", returned_count)
+
+        return {
+            "query": question,
+            "results": curated_results[: settings.source_result_limit],
+            "trusted_domains_considered": settings.trusted_health_domains,
+        }

@@ -5,6 +5,8 @@ from __future__ import annotations
 import uuid
 
 from langgraph.types import Command
+from opentelemetry import trace
+
 
 from healthbot.core.exceptions import (
     SessionBackendUnavailableError,
@@ -25,6 +27,7 @@ from healthbot.workflow.workflow_builder import WorkflowBuilder
 
 logger = get_logger(__name__)
 
+tracer = trace.get_tracer(__name__)
 
 class SessionService:
     """Manage agent sessions and LangGraph resumable interactions."""
@@ -43,29 +46,47 @@ class SessionService:
         """Create and store a new conversation session identifier."""
         session_id = str(uuid.uuid4())
 
-        try:
-            self._session_repository.create_session(session_id)
-        except SessionRepositoryError as exc:
-            logger.exception("Failed to create session in configured backend")
-            raise SessionBackendUnavailableError(
-                "Session storage backend is unavailable.",
-                context={"backend": self.settings.session_backend},
-            ) from exc
+        with tracer.start_as_current_span("session.create") as current_span:
+            current_span.set_attribute(
+                "session.backend",
+                self.settings.session_backend
+            )
 
-        metrics.increment("session.created")
-        logger.info("Created session %s", session_id)
-        return session_id
+            try:
+                self._session_repository.create_session(session_id)
+            except SessionRepositoryError as exc:
+                logger.exception(
+                    "Failed to create session in configured backend"
+                )
+                raise SessionBackendUnavailableError(
+                    "Session storage backend is unavailable.",
+                    context={"backend": self.settings.session_backend},
+                ) from exc
+
+            metrics.increment("session.created")
+            logger.info("Created session %s", session_id)
+            return session_id
 
     def list_sessions(self) -> list[str]:
         """Return all active session identifiers."""
-        try:
-            return self._session_repository.list_sessions()
-        except SessionRepositoryError as exc:
-            logger.exception("Failed to list sessions from configured backend")
-            raise SessionBackendUnavailableError(
-                "Session storage backend is unavailable.",
-                context={"backend": self.settings.session_backend},
-            ) from exc
+        with tracer.start_as_current_span("session.list") as current_span:
+            current_span.set_attribute(
+                "session.backend",
+                self.settings.session_backend
+            )
+
+            try:
+                return self._session_repository.list_sessions()
+            except SessionRepositoryError as exc:
+                current_span.record_exception(exc)
+                current_span.set_attribute("error", True)
+                logger.exception(
+                    "Failed to list sessions from configured backend"
+                )
+                raise SessionBackendUnavailableError(
+                    "Session storage backend is unavailable.",
+                    context={"backend": self.settings.session_backend},
+                ) from exc
 
     def ensure_session(self, session_id: str) -> None:
         """Validate that the session exists."""
@@ -75,35 +96,55 @@ class SessionService:
             logger.exception("Failed to check session existence")
             raise SessionBackendUnavailableError(
                 "Session storage backend is unavailable.",
-                context={"backend": self.settings.session_backend, "session_id": session_id},
+                context={"backend": self.settings.session_backend,
+                         "session_id": session_id},
             ) from exc
 
         if not exists:
-            raise WorkflowError(f"Unknown session_id: {session_id}")
+            raise WorkflowError(
+                f"Unknown session_id: {session_id}"
+            )
 
     def ask(self, session_id: str, question: str) -> dict:
         """Start a conversation turn for a given session."""
         self.ensure_session(session_id)
-        with trace_span("session.ask", session_id=session_id):
-            result = self._graph.invoke(
-                {"question": question},
-                config={"configurable": {"thread_id": session_id}},
+        with tracer.start_as_current_span("session.ask") as current_span:
+            current_span.set_attribute("session_id", session_id)
+            current_span.set_attribute(
+                "question.length",
+                len(question)
             )
-            payload = self._normalize_result(result)
-            payload["session_id"] = session_id
-            self._append_history(
-                session_id,
-                {"type": "ask", "question": question, "result": payload},
+            current_span.set_attribute(
+                "question.backend",
+                self.settings.session_backend
             )
-            metrics.increment("session.ask.calls")
-            return payload
+            try:
+                result = self._graph.invoke(
+                    {"question": question},
+                    config={"configurable": {"thread_id": session_id}},
+                )
+                payload = self._normalize_result(result)
+                payload["session_id"] = session_id
+                self._append_history(
+                    session_id,
+                    {"type": "ask", "question": question, "result": payload},
+                )
+                metrics.increment("session.ask.calls")
+                return payload
+
+            except Exception as exc:
+                current_span.record_exception(exc)
+                current_span.set_attribute("error", True)
+                raise
 
     def approve_quiz(self, session_id: str, approved: bool) -> dict:
         """Resume the e2e after the quiz approval interrupt."""
         self.ensure_session(session_id)
         resume_value = "approve" if approved else "reject"
         with trace_span(
-            "session.quiz_approval", session_id=session_id, approved=approved
+            "session.quiz_approval",
+            session_id=session_id,
+            approved=approved
         ):
             result = self._graph.invoke(
                 Command(resume=resume_value),
@@ -113,12 +154,20 @@ class SessionService:
             payload["session_id"] = session_id
             self._append_history(
                 session_id,
-                {"type": "quiz_approval", "approved": approved, "result": payload},
+                {
+                    "type": "quiz_approval",
+                    "approved": approved,
+                    "result": payload
+                },
             )
             metrics.increment("session.quiz_approval.calls")
             return payload
 
-    def submit_quiz_answer(self, session_id: str, answer: str) -> dict:
+    def submit_quiz_answer(
+            self,
+            session_id: str,
+            answer: str
+    ) -> dict:
         """Resume the e2e after the quiz answer interrupt."""
         self.ensure_session(session_id)
         with trace_span("session.quiz_answer", session_id=session_id):
@@ -137,19 +186,33 @@ class SessionService:
 
     def get_history(self, session_id: str) -> list[dict]:
         self.ensure_session(session_id)
-        try:
-            return self._session_repository.get_history(session_id)
-        except SessionNotFoundError as exc:
-            raise WorkflowError(
-                f"Unknown session_id: {session_id}",
-                context={"session_id": session_id},
-            ) from exc
-        except SessionRepositoryError as exc:
-            logger.exception("Failed to fetch session history")
-            raise SessionBackendUnavailableError(
-                "Session storage backend is unavailable.",
-                context={"backend": self.settings.session_backend, "session_id": session_id},
-            ) from exc
+        with tracer.start_as_current_span("session.history") as current_span:
+            current_span.set_attribute("session_id", session_id)
+            current_span.set_attribute(
+                "session.backend",
+                self.settings.session_backend
+            )
+
+            try:
+                return self._session_repository.get_history(session_id)
+            except SessionNotFoundError as exc:
+                current_span.record_exception(exc)
+                current_span.set_attribute("error", True)
+                raise WorkflowError(
+                    f"Unknown session_id: {session_id}",
+                    context={"session_id": session_id},
+                ) from exc
+            except SessionRepositoryError as exc:
+                current_span.record_exception(exc)
+                current_span.set_attribute("error", True)
+                logger.exception("Failed to fetch session history")
+                raise SessionBackendUnavailableError(
+                    "Session storage backend is unavailable.",
+                    context={
+                        "backend": self.settings.session_backend,
+                        "session_id": session_id
+                    },
+                ) from exc
 
     def close(self) -> None:
         """Release repository and e2e resources."""
@@ -244,7 +307,7 @@ class SessionService:
             "Thanks for using HealthBot! ",
         }
 
-        contents = []
+        contents: list[str] = []
         for message in messages:
             content = getattr(message, "content", None)
             if isinstance(content, str) and content.strip():
