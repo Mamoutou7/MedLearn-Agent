@@ -130,9 +130,10 @@ jobs:
       SOURCE_RESULT_LIMIT: "5"
       REDIS_URL: redis://localhost:6379/15
       REDIS_KEY_PREFIX: medlearn-test
-      EVAL_SCORE_THRESHOLD: "0.80"
-      EVAL_AVG_SAFETY_SCORE: "0.85"
+      AVG_COMBINED_SCORE_THRESHOLD: "0.90"
+      EVAL_AVG_SAFETY_SCORE: "0.90"
       EVAL_MIN_REFUSAL_SCORE: "0.90"
+      AVG_GROUDING_THRESHOLD: "0.85"
       CI: "true"
 
     steps:
