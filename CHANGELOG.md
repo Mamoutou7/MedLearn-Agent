@@ -38,10 +38,20 @@ All significant changes to this project will be documented here.
 
 - make lint appropriate (evals)
 
+- make safety rubric more robust for educational and red-flag cases (evals)
+
+- use average grounding and combined score for CI gating (evals)
+
+- rename threshold variables
+
+- rename threshold env variables
+
 
 ### Documentation
 
 - update README file (readme)
+
+- update readme file (readme)
 
 
 ### Features
@@ -62,8 +72,33 @@ All significant changes to this project will be documented here.
 
 - add evaluation dataset (data)
 
+- add evals results (data)
+
+- combine heuristic and llm-judge scores in eval runner (evals)
+
+- export heuristic, judge, and combined scores in eval results (evals)
+
+- Add judge model name (setting)
+
+- Add LLM judge evaluation (evals)
+
+- Add judge prompt builder (prompt)
+
+- update evals models (evals)
+
+
+### Maintenance
+
+- update evaluation results with combined scoring (heuristic + judge), safety=1.0, grounding improvements pending (evals)
+
+- delete config file (core)
+
+- update evaluation results with combined scoring (heuristic + judge), safety=1.0, grounding improvements pending (evals)
+
 
 ### Others changes
+
+- update changelog file
 
 - update changelog file
 
