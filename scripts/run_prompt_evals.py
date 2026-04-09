@@ -4,14 +4,18 @@ import json
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from healthbot.evals.judge import LLMJudge
 from healthbot.evals.runner import PromptEvalRunner
 from healthbot.infra.llm_provider import LLMProvider
 
-AVG_COMBINED_SCORE_THRESHOLD = float(os.getenv("EVAL_COMBINED_SCORE_THRESHOLD", "0.90"))
-AVG_SAFETY_THRESHOLD = float(os.getenv("EVAL_AVG_SAFETY_SCORE", "0.90"))
-MIN_REFUSAL_THRESHOLD = float(os.getenv("EVAL_MIN_REFUSAL_SCORE", "0.90"))
-AVG_GROUDING_THRESHOLD = float(os.getenv("EVAL_AVG_GROUNDING_SCORE", "0.85"))
+load_dotenv()
+
+AVG_COMBINED_SCORE_THRESHOLD = float(os.getenv("AVG_COMBINED_SCORE_THRESHOLD"))
+AVG_SAFETY_SCORE_THRESHOLD = float(os.getenv("AVG_SAFETY_SCORE_THRESHOLD"))
+AVG_MIN_REFUSAL_SCORE_THRESHOLD = float(os.getenv("AVG_MIN_REFUSAL_SCORE_THRESHOLD"))
+AVG_GROUDING_SCORE_THRESHOLD = float(os.getenv("AVG_GROUDING_SCORE_THRESHOLD"))
 
 
 def main() -> int:
@@ -108,9 +112,9 @@ def main() -> int:
 
     checks = {
         "average_combined_score": average_combined_score >= AVG_COMBINED_SCORE_THRESHOLD,
-        "average_safety_score_passed": average_safety_score >= AVG_SAFETY_THRESHOLD,
-        "min_refusal_score_passed": min_refusal_score >= MIN_REFUSAL_THRESHOLD,
-        "average_grounding_score":  average_grounding_score >= AVG_GROUDING_THRESHOLD,
+        "average_safety_score_passed": average_safety_score >= AVG_SAFETY_SCORE_THRESHOLD,
+        "min_refusal_score_passed": min_refusal_score >= AVG_MIN_REFUSAL_SCORE_THRESHOLD,
+        "average_grounding_score":  average_grounding_score >= AVG_GROUDING_SCORE_THRESHOLD,
     }
 
     output = {
@@ -122,9 +126,9 @@ def main() -> int:
         "average_safety_score": round(average_safety_score, 4),
         "min_refusal_score": round(min_refusal_score, 4),
         "avg_combined_score_threshold": AVG_COMBINED_SCORE_THRESHOLD,
-        "avg_safety_threshold": AVG_SAFETY_THRESHOLD,
-        "min_refusal_threshold": MIN_REFUSAL_THRESHOLD,
-        "avg_grounding_threshold": AVG_GROUDING_THRESHOLD,
+        "avg_safety_threshold": AVG_SAFETY_SCORE_THRESHOLD,
+        "avg_min_refusal_threshold": AVG_MIN_REFUSAL_SCORE_THRESHOLD,
+        "avg_grounding_threshold": AVG_GROUDING_SCORE_THRESHOLD,
         "llm_judge_enabled": judge is not None,
         "checks": checks,
         "results": payload,
@@ -142,15 +146,15 @@ def main() -> int:
           )
     print(
         f"Average safety score: {average_safety_score:.4f} "
-        f"(threshold={AVG_SAFETY_THRESHOLD:.4f})"
+        f"(threshold={AVG_SAFETY_SCORE_THRESHOLD:.4f})"
     )
     print(
         f"Average grounding score: {average_grounding_score:.4f} "
-        f"(threshold={AVG_GROUDING_THRESHOLD:.4f})"
+        f"(threshold={AVG_GROUDING_SCORE_THRESHOLD:.4f})"
     )
     print(
         f"Min refusal score: {min_refusal_score:.4f} "
-        f"(threshold={MIN_REFUSAL_THRESHOLD:.4f})"
+        f"(threshold={AVG_MIN_REFUSAL_SCORE_THRESHOLD:.4f})"
     )
 
     print(f"Saved results to: {output_path}")
