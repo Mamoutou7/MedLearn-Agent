@@ -66,7 +66,7 @@ def setup_otel(app: Any) -> None:
     HTTPXClientInstrumentor().instrument()
 
     logger.info(
-        f"OpenTelemetry initialized | service=%s | endpoint=%s | environment=%s ",
+        f"OpenTelemetry initialized | service=%s | endpoint=%s",
         settings.otel_service_name,
         settings.otel_exporter_otlp_endpoint,
         settings.otel_environment,
