@@ -106,7 +106,7 @@ class Settings(BaseSettings):
         default=None,
         alias="OTEL_EXPORTER_OTLP_HEADERS",
     )
-    otel_environment: str = Field(default="production", alias="OTEL_ENVIRONMENT")
+    otel_environment: str = Field(default="development", alias="OTEL_ENVIRONMENT")
 
 
     @field_validator("redis_key_prefix")
