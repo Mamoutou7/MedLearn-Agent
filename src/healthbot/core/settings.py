@@ -94,7 +94,7 @@ class Settings(BaseSettings):
 
     # OpenTelemetry
     otel_enabled: bool = Field(default=False, alias="OTEL_ENABLED")
-    otel_service_name: str = Field(default="otel", alias="OTEL_SERVICE_NAME")
+    otel_service_name: str = Field(default="medlearn-agent", alias="OTEL_SERVICE_NAME")
     otel_exporter_otlp_endpoint: str | None = Field(
         default=None,
         alias="OTEL_EXPORTER_OTLP_ENDPOINT",
