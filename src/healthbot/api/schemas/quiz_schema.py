@@ -12,9 +12,7 @@ class QuizAnswerRequest(BaseModel):
     """Payload used to submit a quiz answer."""
 
     session_id: str = Field(..., description="Active session identifier")
-    answer: str = Field(
-        ..., min_length=1, max_length=1, description="Quiz answer: A, B, C, or D"
-    )
+    answer: str = Field(..., min_length=1, max_length=1, description="Quiz answer: A, B, C, or D")
 
 
 class QuizWorkflowResponse(BaseModel):
