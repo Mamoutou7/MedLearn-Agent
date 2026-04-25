@@ -1,6 +1,7 @@
 """
 Pydantic domain used for structured LLM outputs.
 """
+
 from typing import Literal
 
 from pydantic import BaseModel
