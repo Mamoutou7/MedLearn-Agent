@@ -13,7 +13,6 @@ from healthbot.core.logging import configure_logging
 from healthbot.core.settings import settings
 from healthbot.observability.otel import setup_otel
 
-
 configure_logging()
 
 

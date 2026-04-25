@@ -41,9 +41,7 @@ def get_session_repository() -> SessionRepository:
                 key_prefix=settings.redis_key_prefix,
             )
             repository.ping()
-            logger.info("Using Redis session repository | redis_url=%s",
-                        settings.redis_url
-                        )
+            logger.info("Using Redis session repository | redis_url=%s", settings.redis_url)
             return repository
         except SessionRepositoryError as exc:
             if settings.session_backend_fallback_enabled:
@@ -62,6 +60,4 @@ def get_session_repository() -> SessionRepository:
 @lru_cache(maxsize=1)
 def get_session_service() -> SessionService:
     """Return the session service singleton."""
-    return SessionService(session_repository=get_session_repository(),
-                          settings=settings
-                          )
+    return SessionService(session_repository=get_session_repository(), settings=settings)
