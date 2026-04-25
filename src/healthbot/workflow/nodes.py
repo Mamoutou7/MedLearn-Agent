@@ -13,10 +13,10 @@ from healthbot.core.exceptions import LLMServiceError
 from healthbot.core.logging import get_logger
 from healthbot.domain.models import WorkflowState
 from healthbot.infra.llm_provider import LLMProvider
-from healthbot.services.prompt_manager import PromptManager
 from healthbot.prompts.health_agent import build_welcome_messages
 from healthbot.services.explanation_service import ExplanationService
 from healthbot.services.health_validator import HealthValidator
+from healthbot.services.prompt_manager import PromptManager
 from healthbot.services.quiz_service import (
     QuizApprovalService,
     QuizGradingService,
@@ -107,14 +107,8 @@ class HealthWorkflowNodes:
             current_span.set_attribute("history.count", len(history))
 
             try:
-                prompt_messages = self.prompt_manager.render(
-                    "health_agent",
-                    question=question
-                )
-                current_span.set_attribute(
-                    "prompt.message_count",
-                    len(prompt_messages)
-                )
+                prompt_messages = self.prompt_manager.render("health_agent", question=question)
+                current_span.set_attribute("prompt.message_count", len(prompt_messages))
 
                 if history:
                     injected_history = history[-4:]
