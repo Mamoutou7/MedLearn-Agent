@@ -30,7 +30,10 @@ class QuizService:
             with trace_span("quiz.generate"):
                 metrics.increment("quiz.generate.calls")
                 llm_structured = self.llm.with_structured_output(QuizQuestion)
-                quiz = llm_structured.invoke(build_quiz_generation_messages(summary))
+                quiz = llm_structured.invoke(
+                    build_quiz_generation_messages(summary),
+                    span_name="llm.quiz_generation",
+                )
                 logger.info("Quiz generated successfully")
                 return quiz.model_dump()
 

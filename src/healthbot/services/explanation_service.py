@@ -100,7 +100,10 @@ class ExplanationService:
                     summary=summary,
                 )
 
-                explanation = llm_structured.invoke(formatted_messages)
+                explanation = llm_structured.invoke(
+                    formatted_messages,
+                    span_name="llm.quiz_explanation",
+                )
                 logger.info("Quiz explanation generated successfully")
                 return explanation.model_dump()
 
