@@ -39,7 +39,6 @@ def run_session(graph, question, thread_id):
     )
 
     if decision not in ["approve", "yes", "y"]:
-
         print("\nQuiz skipped.")
         graph.invoke(Command(resume="reject"), config=config)
         return
@@ -88,7 +87,6 @@ def human_in_the_loop():
     thread_id = 1
 
     while True:
-
         question = input(
             "\nWhat health topic would you like to learn about? (or type 'exit'): "
         ).strip()
