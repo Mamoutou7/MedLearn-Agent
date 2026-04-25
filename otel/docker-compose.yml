@@ -1,0 +1,14 @@
+services:
+  alloy:
+    image: grafana/alloy:latest
+    container_name: medlearn-alloy
+    command:
+      - run
+      - --stability.level=experimental
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./alloy.config.alloy:/etc/alloy/config.alloy:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    restart: unless-stopped
