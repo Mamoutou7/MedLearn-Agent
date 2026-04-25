@@ -22,5 +22,5 @@ class LLMJudge:
             start = content.find("{")
             end = content.rfind("}")
             if start != -1 and end != -1 and end > start:
-                return json.loads(content[start:end + 1])
+                return json.loads(content[start : end + 1])
             raise

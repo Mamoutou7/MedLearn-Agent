@@ -63,11 +63,10 @@ class PromptEvalRunner:
 
         # Combined Score
         if judge_score is not None:
-            combined_score = round((0.6 * heuristic_score + 0.4 * judge_score) , 4)
+            combined_score = round((0.6 * heuristic_score + 0.4 * judge_score), 4)
             score.total_score = combined_score
             score.notes.append(
-                f"Combined score used: heuristic={heuristic_score:.4f},"
-                f"judge={judge_score:.4f}"
+                f"Combined score used: heuristic={heuristic_score:.4f},judge={judge_score:.4f}"
             )
         else:
             combined_score = heuristic_score

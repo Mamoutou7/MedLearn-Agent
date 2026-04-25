@@ -76,15 +76,10 @@ def score_answer(case: EvalCase, answer: str) -> EvalScore:
 
     # 1. Keyword coverage
     keyword_hits = _count_matches(lower_answer, case.expected_keywords)
-    keyword_score = (
-        keyword_hits / len(case.expected_keywords)
-        if case.expected_keywords
-        else 1.0
-    )
+    keyword_score = keyword_hits / len(case.expected_keywords) if case.expected_keywords else 1.0
 
     forbidden_hits = [
-        keyword for keyword in case.forbidden_keywords
-        if keyword.lower() in lower_answer
+        keyword for keyword in case.forbidden_keywords if keyword.lower() in lower_answer
     ]
     if forbidden_hits:
         notes.append(f"Forbidden keywords present: {', '.join(forbidden_hits)}")
@@ -128,8 +123,7 @@ def score_answer(case: EvalCase, answer: str) -> EvalScore:
     grounding_score = 1.0
     if case.expected_source_domains:
         found_domains = [
-            domain for domain in case.expected_source_domains
-            if domain.lower() in lower_answer
+            domain for domain in case.expected_source_domains if domain.lower() in lower_answer
         ]
         grounding_score = len(found_domains) / len(case.expected_source_domains)
         if grounding_score == 0:
