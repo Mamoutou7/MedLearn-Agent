@@ -70,7 +70,8 @@ class PromptEvalRunner:
             combined_score = heuristic_score
 
         logger.info(
-            "Prompt eval completed | case_id=%s | prompt=%s | heuristic=%.3f | judge=%s | combined=%.3f",
+            "Prompt eval completed | case_id=%s | prompt=%s | "
+            "heuristic=%.3f | judge=%s | combined=%.3f",
             case.case_id,
             case.prompt_name,
             heuristic_score,
