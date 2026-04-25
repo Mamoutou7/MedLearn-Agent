@@ -17,6 +17,7 @@ tracer = trace.get_tracer(__name__)
 SEARCH_DEPTH = "advanced"
 MAX_RESULTS = 8
 
+
 def _extract_domain(url: str | None) -> str | None:
     if not url:
         return None
