@@ -29,7 +29,5 @@ async def submit_quiz_answer(
     session_service: SessionService = Depends(get_session_service),
 ):
     """Resume the e2e after the user submits the quiz answer."""
-    result = session_service.submit_quiz_answer(
-        payload.session_id, payload.answer.upper()
-    )
+    result = session_service.submit_quiz_answer(payload.session_id, payload.answer.upper())
     return QuizWorkflowResponse(**result)
