@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage
 
 
 class WorkflowFakeLLM:
-    def invoke(self, _messages):
+    def invoke(self, _messages, *args, **kwargs):
         return AIMessage(content="Stub response")
 
 

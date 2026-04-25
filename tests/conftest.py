@@ -181,14 +181,14 @@ def test_client(
 
 
 class FakeLLM:
-    def invoke(self, messages):
+    def invoke(self, messages, *args, **kwargs):
         from langchain_core.messages import AIMessage
 
         return AIMessage(content="Stub response")
 
-    def with_structured_output(self, schema):
+    def with_structured_output(self, schema, *args, **kwargs):
         class _Structured:
-            def invoke(self, messages):
+            def invoke(self, messages, *args, **kwargs):
                 class _FakeModel:
                     def model_dump(self):
                         schema_name = getattr(schema, "__name__", "")

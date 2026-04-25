@@ -16,7 +16,7 @@ class FakeInterrupt:
 
 
 class FakeGraph:
-    def invoke(self, payload, config=None):
+    def invoke(self, payload, config=None, *args, **kwargs):
         if isinstance(payload, dict):
             return {
                 "__interrupt__": [

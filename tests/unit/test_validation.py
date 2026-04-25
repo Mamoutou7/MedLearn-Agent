@@ -7,7 +7,7 @@ class FakeLLM:
     def __init__(self, response):
         self.response = response
 
-    def invoke(self, messages):
+    def invoke(self, messages, *args, **kwargs):
         return self.response
 
 
@@ -55,7 +55,7 @@ def test_health_validation_error():
     """
 
     class ErrorLLM:
-        def invoke(self, messages):
+        def invoke(self, messages, *args, **kwargs):
             raise Exception("LLM error")
 
     class ErrorProvider:
