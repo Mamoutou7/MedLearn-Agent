@@ -22,7 +22,12 @@ class ObservedLLM:
         self._llm = llm
         self._default_span_name = default_span_name
 
-    def invoke(self, messages: Any, *args: Any, span_name: str | None = None, **kwargs: Any) -> Any:
+    def invoke(
+            self, messages: Any,
+            *args: Any,
+            span_name: str | None = None,
+            **kwargs: Any
+    ) -> Any:
         effective_span_name = span_name or self._default_span_name
 
         with tracer.start_as_current_span(effective_span_name) as span:
@@ -49,14 +54,14 @@ class ObservedLLM:
                 metrics.increment("llm.invoke.error")
                 raise
 
-    def bind_tools(self, *args: Any, **kwargs: Any) -> "ObservedLLM":
+    def bind_tools(self, *args: Any, **kwargs: Any) -> ObservedLLM:
         """
         Preserve LangChain tool binding while keeping observation around invoke().
         """
         bound = self._llm.bind_tools(*args, **kwargs)
         return ObservedLLM(bound, default_span_name=self._default_span_name)
 
-    def with_structured_output(self, *args: Any, **kwargs: Any) -> "ObservedLLM":
+    def with_structured_output(self, *args: Any, **kwargs: Any) -> ObservedLLM:
         """
         Preserve structured-output usage while keeping observation around invoke().
         """
