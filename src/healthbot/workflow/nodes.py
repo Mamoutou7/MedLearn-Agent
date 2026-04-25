@@ -30,6 +30,7 @@ from healthbot.services.safety_service import SafetyService
 logger = get_logger(__name__)
 tracer = trace.get_tracer(__name__)
 
+
 class HealthWorkflowNodes:
     """
     Collection of e2e nodes used in the LangGraph state machine.
@@ -53,18 +54,14 @@ class HealthWorkflowNodes:
         """
         question = state.get("question", "")
 
-        with tracer.start_as_current_span(
-                "workflow.entry_point"
-        ) as current_span:
+        with tracer.start_as_current_span("workflow.entry_point") as current_span:
             current_span.set_attribute("question.length", len(question))
             logger.info("Starting new HealthBot session")
 
             return {
                 "messages": [
                     *build_welcome_messages(question=question),
-                    SystemMessage(
-                        content="Answer the user's health question clearly and safely."
-                    ),
+                    SystemMessage(content="Answer the user's health question clearly and safely."),
                     HumanMessage(content=question),
                 ]
             }
@@ -201,7 +198,7 @@ class HealthWorkflowNodes:
                     "messages": [
                         AIMessage(
                             content="Sorry, I couldn't generate "
-                                    "a quiz because no health summary was found."
+                            "a quiz because no health summary was found."
                         )
                     ],
                     "quiz_generated": False,
@@ -211,12 +208,12 @@ class HealthWorkflowNodes:
                 quiz = self.quiz_service.generate_quiz(summary)
 
                 quiz_text = dedent(f"""        
-                    {quiz['question']}
+                    {quiz["question"]}
             
-                    A) {quiz['option_a']}
-                    B) {quiz['option_b']}
-                    C) {quiz['option_c']}
-                    D) {quiz['option_d']}
+                    A) {quiz["option_a"]}
+                    B) {quiz["option_b"]}
+                    C) {quiz["option_c"]}
+                    D) {quiz["option_d"]}
             
                     Reply with A, B, C, or D.
                 """).strip()
