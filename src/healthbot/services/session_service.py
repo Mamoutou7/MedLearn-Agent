@@ -7,7 +7,6 @@ import uuid
 from langgraph.types import Command
 from opentelemetry import trace
 
-
 from healthbot.core.exceptions import (
     SessionBackendUnavailableError,
     WorkflowError,
@@ -29,6 +28,7 @@ logger = get_logger(__name__)
 
 tracer = trace.get_tracer(__name__)
 
+
 class SessionService:
     """Manage agent sessions and LangGraph resumable interactions."""
 
@@ -47,17 +47,12 @@ class SessionService:
         session_id = str(uuid.uuid4())
 
         with tracer.start_as_current_span("session.create") as current_span:
-            current_span.set_attribute(
-                "session.backend",
-                self.settings.session_backend
-            )
+            current_span.set_attribute("session.backend", self.settings.session_backend)
 
             try:
                 self._session_repository.create_session(session_id)
             except SessionRepositoryError as exc:
-                logger.exception(
-                    "Failed to create session in configured backend"
-                )
+                logger.exception("Failed to create session in configured backend")
                 raise SessionBackendUnavailableError(
                     "Session storage backend is unavailable.",
                     context={"backend": self.settings.session_backend},
@@ -70,19 +65,14 @@ class SessionService:
     def list_sessions(self) -> list[str]:
         """Return all active session identifiers."""
         with tracer.start_as_current_span("session.list") as current_span:
-            current_span.set_attribute(
-                "session.backend",
-                self.settings.session_backend
-            )
+            current_span.set_attribute("session.backend", self.settings.session_backend)
 
             try:
                 return self._session_repository.list_sessions()
             except SessionRepositoryError as exc:
                 current_span.record_exception(exc)
                 current_span.set_attribute("error", True)
-                logger.exception(
-                    "Failed to list sessions from configured backend"
-                )
+                logger.exception("Failed to list sessions from configured backend")
                 raise SessionBackendUnavailableError(
                     "Session storage backend is unavailable.",
                     context={"backend": self.settings.session_backend},
@@ -96,28 +86,19 @@ class SessionService:
             logger.exception("Failed to check session existence")
             raise SessionBackendUnavailableError(
                 "Session storage backend is unavailable.",
-                context={"backend": self.settings.session_backend,
-                         "session_id": session_id},
+                context={"backend": self.settings.session_backend, "session_id": session_id},
             ) from exc
 
         if not exists:
-            raise WorkflowError(
-                f"Unknown session_id: {session_id}"
-            )
+            raise WorkflowError(f"Unknown session_id: {session_id}")
 
     def ask(self, session_id: str, question: str) -> dict:
         """Start a conversation turn for a given session."""
         self.ensure_session(session_id)
         with tracer.start_as_current_span("session.ask") as current_span:
             current_span.set_attribute("session_id", session_id)
-            current_span.set_attribute(
-                "question.length",
-                len(question)
-            )
-            current_span.set_attribute(
-                "question.backend",
-                self.settings.session_backend
-            )
+            current_span.set_attribute("question.length", len(question))
+            current_span.set_attribute("question.backend", self.settings.session_backend)
             try:
                 result = self._graph.invoke(
                     {"question": question},
@@ -141,11 +122,7 @@ class SessionService:
         """Resume the e2e after the quiz approval interrupt."""
         self.ensure_session(session_id)
         resume_value = "approve" if approved else "reject"
-        with trace_span(
-            "session.quiz_approval",
-            session_id=session_id,
-            approved=approved
-        ):
+        with trace_span("session.quiz_approval", session_id=session_id, approved=approved):
             result = self._graph.invoke(
                 Command(resume=resume_value),
                 config={"configurable": {"thread_id": session_id}},
@@ -154,20 +131,12 @@ class SessionService:
             payload["session_id"] = session_id
             self._append_history(
                 session_id,
-                {
-                    "type": "quiz_approval",
-                    "approved": approved,
-                    "result": payload
-                },
+                {"type": "quiz_approval", "approved": approved, "result": payload},
             )
             metrics.increment("session.quiz_approval.calls")
             return payload
 
-    def submit_quiz_answer(
-            self,
-            session_id: str,
-            answer: str
-    ) -> dict:
+    def submit_quiz_answer(self, session_id: str, answer: str) -> dict:
         """Resume the e2e after the quiz answer interrupt."""
         self.ensure_session(session_id)
         with trace_span("session.quiz_answer", session_id=session_id):
@@ -188,10 +157,7 @@ class SessionService:
         self.ensure_session(session_id)
         with tracer.start_as_current_span("session.history") as current_span:
             current_span.set_attribute("session_id", session_id)
-            current_span.set_attribute(
-                "session.backend",
-                self.settings.session_backend
-            )
+            current_span.set_attribute("session.backend", self.settings.session_backend)
 
             try:
                 return self._session_repository.get_history(session_id)
@@ -208,10 +174,7 @@ class SessionService:
                 logger.exception("Failed to fetch session history")
                 raise SessionBackendUnavailableError(
                     "Session storage backend is unavailable.",
-                    context={
-                        "backend": self.settings.session_backend,
-                        "session_id": session_id
-                    },
+                    context={"backend": self.settings.session_backend, "session_id": session_id},
                 ) from exc
 
     def close(self) -> None:
@@ -267,11 +230,7 @@ class SessionService:
 
             next_action = "quiz_answer" if quiz_question else "quiz_approval"
 
-            summary = (
-                full_summary
-                or prompt_question
-                or self._extract_last_message_content(result)
-            )
+            summary = full_summary or prompt_question or self._extract_last_message_content(result)
 
             return {
                 "status": "interrupted",
@@ -320,8 +279,6 @@ class SessionService:
             return contents[-2]
 
         return contents[-1]
-
-
 
     def ping(self) -> bool:
         repository = self._session_repository

@@ -33,9 +33,7 @@ class HealthValidator:
         try:
             with trace_span("health.validate"):
                 metrics.increment("health.validate.calls")
-                response = self.llm.invoke(
-                    build_health_validator_messages(question)
-                )
+                response = self.llm.invoke(build_health_validator_messages(question))
                 decision = response.content.strip().upper()
                 logger.debug(f"LLM decision: {decision}")
 

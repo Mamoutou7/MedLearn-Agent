@@ -56,9 +56,9 @@ class SafetyService:
             if cited_domains.lower() not in (answer or "").lower():
                 grounding_note = f"Sources reviewed: {cited_domains}."
         else:
-            grounding_note = ("This answer is general "
-                              "educational information and is not a diagnosis."
-                              )
+            grounding_note = (
+                "This answer is general educational information and is not a diagnosis."
+            )
 
         return SafetyReview(
             emergency_guidance=emergency_guidance,
