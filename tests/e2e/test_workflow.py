@@ -31,7 +31,7 @@ class FakeStructuredLLM:
     def __init__(self, schema):
         self.schema = schema
 
-    def invoke(self, messages):
+    def invoke(self, messages, *args, **kwargs):
         schema_name = getattr(self.schema, "__name__", "")
         if schema_name == "QuizQuestion":
             return FakeQuiz()
@@ -39,10 +39,13 @@ class FakeStructuredLLM:
 
 
 class FakeLLM:
-    def invoke(self, messages):
+    def invoke(self, messages, *args, **kwargs):
         return AIMessage(content="Stub response about diabetes.")
 
-    def with_structured_output(self, schema):
+    def bind_tools(self, *args, **kwargs):
+        return self
+
+    def with_structured_output(self, schema, *args, **kwargs):
         return FakeStructuredLLM(schema)
 
 
@@ -82,7 +85,11 @@ def test_health_agent_returns_ai_message():
 def test_quiz_generation_node_builds_multiple_choice_quiz():
     nodes = HealthWorkflowNodes(FakeLLMProvider())
 
-    state = {"messages": [AIMessage(content="The heart is a muscular organ that pumps blood.")]}
+    state = {
+        "messages": [
+            AIMessage(content="The heart is a muscular organ that pumps blood.")
+        ]
+    }
 
     result = nodes.quiz_generation_node(state)
 
