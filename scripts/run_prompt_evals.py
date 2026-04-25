@@ -15,7 +15,7 @@ load_dotenv()
 AVG_COMBINED_SCORE_THRESHOLD = float(os.getenv("AVG_COMBINED_SCORE_THRESHOLD"))
 AVG_SAFETY_SCORE_THRESHOLD = float(os.getenv("AVG_SAFETY_SCORE_THRESHOLD"))
 AVG_MIN_REFUSAL_SCORE_THRESHOLD = float(os.getenv("AVG_MIN_REFUSAL_SCORE_THRESHOLD"))
-AVG_GROUDING_SCORE_THRESHOLD = float(os.getenv("AVG_GROUDING_SCORE_THRESHOLD"))
+AVG_GROUNDING_SCORE_THRESHOLD = float(os.getenv("AVG_GROUNDING_SCORE_THRESHOLD"))
 
 
 def main() -> int:
@@ -52,17 +52,9 @@ def main() -> int:
     combined_scores: list[float] = []
 
     for result in results:
-        heuristic_score = getattr(
-            result,
-            "heuristic_score",
-            result.score.total_score
-        )
+        heuristic_score = getattr(result, "heuristic_score", result.score.total_score)
         judge_score = getattr(result, "judge_score", None)
-        combined_score = getattr(
-            result,
-            "combined_score",
-            result.score.total_score
-        )
+        combined_score = getattr(result, "combined_score", result.score.total_score)
         judge_payload = getattr(result, "judge_payload", None)
 
         total_scores.append(combined_score)
@@ -100,57 +92,55 @@ def main() -> int:
 
     average_safety_score = sum(safety_scores) / len(safety_scores) if safety_scores else 0.0
     min_refusal_score = min(refusal_scores) if refusal_scores else 1.0
-    average_grounding_score = sum(grounding_scores) / len(grounding_scores) \
-        if grounding_scores else 0.0
-    average_heuristic_score = (
-        sum(heuristic_scores) / len(heuristic_scores) if heuristic_scores else 0.0)
-    average_judge_score = sum(judge_scores) / len(judge_scores) \
-        if judge_scores else None
-    average_combined_score = (
-        sum(combined_scores) / len(combined_scores) if combined_scores else 0.0
+    average_grounding_score = (
+        sum(grounding_scores) / len(grounding_scores) if grounding_scores else 0.0
     )
+    average_heuristic_score = (
+        sum(heuristic_scores) / len(heuristic_scores) if heuristic_scores else 0.0
+    )
+    average_judge_score = sum(judge_scores) / len(judge_scores) if judge_scores else None
+    average_combined_score = sum(combined_scores) / len(combined_scores) if combined_scores else 0.0
 
     checks = {
         "average_combined_score": average_combined_score >= AVG_COMBINED_SCORE_THRESHOLD,
         "average_safety_score_passed": average_safety_score >= AVG_SAFETY_SCORE_THRESHOLD,
         "min_refusal_score_passed": min_refusal_score >= AVG_MIN_REFUSAL_SCORE_THRESHOLD,
-        "average_grounding_score":  average_grounding_score >= AVG_GROUDING_SCORE_THRESHOLD,
+        "average_grounding_score": average_grounding_score >= AVG_GROUNDING_SCORE_THRESHOLD,
     }
 
     output = {
         "average_score": round(average_combined_score, 4),
         "average_heuristic_score": round(average_heuristic_score, 4),
         "average_judge_score": round(average_judge_score, 4)
-        if average_judge_score is not None else None,
+        if average_judge_score is not None
+        else None,
         "average_combined_score": round(average_combined_score, 4),
         "average_safety_score": round(average_safety_score, 4),
         "min_refusal_score": round(min_refusal_score, 4),
         "avg_combined_score_threshold": AVG_COMBINED_SCORE_THRESHOLD,
         "avg_safety_threshold": AVG_SAFETY_SCORE_THRESHOLD,
         "avg_min_refusal_threshold": AVG_MIN_REFUSAL_SCORE_THRESHOLD,
-        "avg_grounding_threshold": AVG_GROUDING_SCORE_THRESHOLD,
+        "avg_grounding_threshold": AVG_GROUNDING_SCORE_THRESHOLD,
         "llm_judge_enabled": judge is not None,
         "checks": checks,
         "results": payload,
     }
-    output_path.write_text(
-        json.dumps(output, indent=2),
-        encoding="utf-8"
-    )
+    output_path.write_text(json.dumps(output, indent=2), encoding="utf-8")
 
     print(f"Average heuristic score: {average_heuristic_score:.4f}")
     if average_judge_score is not None:
         print(f"Average judge score: {average_judge_score:.4f}")
-    print(f"Average combined score: {average_combined_score:.4f} "
-          f"(threshold={AVG_COMBINED_SCORE_THRESHOLD:.4f})"
-          )
+    print(
+        f"Average combined score: {average_combined_score:.4f} "
+        f"(threshold={AVG_COMBINED_SCORE_THRESHOLD:.4f})"
+    )
     print(
         f"Average safety score: {average_safety_score:.4f} "
         f"(threshold={AVG_SAFETY_SCORE_THRESHOLD:.4f})"
     )
     print(
         f"Average grounding score: {average_grounding_score:.4f} "
-        f"(threshold={AVG_GROUDING_SCORE_THRESHOLD:.4f})"
+        f"(threshold={AVG_GROUNDING_SCORE_THRESHOLD:.4f})"
     )
     print(
         f"Min refusal score: {min_refusal_score:.4f} "
