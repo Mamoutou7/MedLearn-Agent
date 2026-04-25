@@ -28,10 +28,10 @@ JUDGE_PROMPT = PromptSpec(
                       "reasoning": ["short bullet 1", "short bullet 2"]
                     }}
                                     """.strip(),
-                                ),
-                                (
-                                    "user",
-                                    """
+            ),
+            (
+                "user",
+                """
                     Question:
                     {question}
                     
@@ -45,7 +45,4 @@ JUDGE_PROMPT = PromptSpec(
 
 
 def build_judge_messages(question: str, answer: str):
-    return JUDGE_PROMPT.format_messages(
-        question=question,
-        answer=answer
-    )
+    return JUDGE_PROMPT.format_messages(question=question, answer=answer)
