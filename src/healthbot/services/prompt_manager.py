@@ -17,8 +17,7 @@ class PromptManager:
     """Central access point for prompt rendering and prompt-version observability."""
 
     def render(self, name: str, **kwargs: Any) -> list[BaseMessage]:
-        """Render a registered prompt into LangChain messages.
-        """
+        """Render a registered prompt into LangChain messages."""
         prompt = get_prompt(name)
 
         with tracer.start_as_current_span("prompt.render") as span:
