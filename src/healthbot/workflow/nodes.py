@@ -14,6 +14,8 @@ from healthbot.core.logging import get_logger
 from healthbot.domain.models import WorkflowState
 from healthbot.infra.llm_provider import LLMProvider
 from healthbot.prompts.health_agent import build_welcome_messages
+from healthbot.services.answer_composer import AnswerComposer
+from healthbot.domain.evidence import EvidenceSource
 from healthbot.services.explanation_service import ExplanationService
 from healthbot.services.health_validator import HealthValidator
 from healthbot.services.medical_policy import MedicalPolicy
@@ -23,6 +25,7 @@ from healthbot.services.quiz_service import (
     QuizGradingService,
     QuizService,
 )
+from healthbot.infra.web_search_tool import web_search_tool
 from healthbot.services.safety_classifier import SafetyClassifier
 from healthbot.services.safety_service import SafetyService
 
@@ -48,6 +51,7 @@ class HealthWorkflowNodes:
         self.prompt_manager = PromptManager()
         self.safety_classifier = SafetyClassifier()
         self.medical_policy = MedicalPolicy()
+        self.answer_composer = AnswerComposer()
 
     # ENTRY POINT
     def entry_point(self, state: WorkflowState) -> dict:
@@ -96,6 +100,50 @@ class HealthWorkflowNodes:
                     context={"question": question},
                 ) from exc
 
+    # RETRIEVAL NODE
+    def retrieval_node(self, state: WorkflowState) -> dict:
+        """Retrieve external evidence for grounded health answers."""
+        question = state.get("question", "")
+
+        with tracer.start_as_current_span("workflow.retrieval") as current_span:
+            current_span.set_attribute("question.length", len(question))
+            logger.info("Retrieving external health evidence")
+
+            if not question.strip():
+                current_span.set_attribute("retrieval.skipped", True)
+                return {
+                    "sources": [],
+                    "source_query": question,
+                    "grounding_used": False,
+                }
+
+            try:
+                result = web_search_tool.invoke(question)
+
+                sources = result.get("results", [])
+                current_span.set_attribute("retrieval.source_count", len(sources))
+                current_span.set_attribute(
+                    "retrieval.trusted_source_count",
+                    sum(1 for source in sources if source.get("trusted_source")),
+                )
+
+                return {
+                    "sources": sources,
+                    "source_query": result.get("query", question),
+                    "grounding_used": bool(sources),
+                }
+
+            except Exception as exc:
+                current_span.record_exception(exc)
+                current_span.set_attribute("error", True)
+                logger.exception("Retrieval failed; continuing without sources")
+
+                return {
+                    "sources": [],
+                    "source_query": question,
+                    "grounding_used": False,
+                }
+
     # AGENT NODE
     def health_agent(self, state: WorkflowState) -> dict:
         """
@@ -103,6 +151,9 @@ class HealthWorkflowNodes:
         """
         question = state.get("question", "")
         history = state.get("messages", [])
+
+        sources = state.get("sources", [])
+        source_context = self._format_sources_for_prompt(sources)
 
         logger.info("Running health agent")
 
@@ -153,6 +204,7 @@ class HealthWorkflowNodes:
                 prompt_messages = self.prompt_manager.render(
                     "health_agent",
                     question=question,
+                    source_context=source_context,
                 )
                 current_span.set_attribute("prompt.message_count", len(prompt_messages))
 
@@ -172,9 +224,31 @@ class HealthWorkflowNodes:
                 response = self.safety_service.apply(response, question=question)
                 response = self.medical_policy.enforce_on_message(response)
 
+                evidence_sources = [
+                    EvidenceSource(
+                        title=item.get("title", "Untitled source"),
+                        url=item.get("url", ""),
+                        domain=item.get("domain", ""),
+                        content=item.get("content", ""),
+                        trusted_source=bool(item.get("trusted_source", False)),
+                        score=item.get("score"),
+                    )
+                    for item in sources
+                ]
+
                 content = getattr(response, "content", "")
-                if isinstance(content, str):
+                if isinstance(content, str) and evidence_sources:
                     current_span.set_attribute("response.length", len(content))
+
+                    response = AIMessage(
+                        content=self.answer_composer.compose(
+                            content,
+                            sources=evidence_sources,
+                            include_disclaimer=False,
+                        ),
+                        additional_kwargs=response.additional_kwargs,
+                        response_metadata=response.response_metadata,
+                    )
 
                 return {"messages": [response]}
 
@@ -183,6 +257,30 @@ class HealthWorkflowNodes:
                 current_span.set_attribute("error", True)
                 logger.exception("LLM execution failed")
                 raise LLMServiceError("Agent execution failed") from exc
+
+    def _format_sources_for_prompt(self, sources: list[dict]) -> str:
+        if not sources:
+            return "No external sources were retrieved."
+
+        lines = []
+        for idx, source in enumerate(sources, start=1):
+            title = source.get("title") or "Untitled source"
+            domain = source.get("domain") or "unknown source"
+            content = source.get("content") or ""
+            url = source.get("url") or ""
+
+            lines.append(
+                "\n".join(
+                    [
+                        f"[{idx}] {title}",
+                        f"Domain: {domain}",
+                        f"URL: {url}",
+                        f"Content: {content}",
+                    ]
+                )
+            )
+
+        return "\n\n".join(lines)
 
     # REJECTION NODE
     def rejection_node(self, state: WorkflowState):
