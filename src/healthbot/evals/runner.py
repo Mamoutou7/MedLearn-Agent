@@ -33,15 +33,16 @@ class PromptEvalRunner:
 
     def run_case(self, case: EvalCase) -> EvalResult:
         messages = self.build_messages(case)
-        response = self.llm.invoke(messages)
+        response = self.llm.invoke(
+            messages,
+            span_name=f"llm.eval.{case.prompt_name}",
+        )
 
         answer = response.content if hasattr(response, "content") else str(response)
 
-        # Heuristic Score
         score = score_answer(case, answer)
         heuristic_score = score.total_score
 
-        # Optional Judge Score
         judge_score: float | None = None
         judge_payload: dict[str, Any] | None = None
 
@@ -52,7 +53,6 @@ class PromptEvalRunner:
                     answer=answer,
                 )
                 judge_score = float(judge_payload.get("overall_score", 0.0))
-
             except Exception:
                 logger.exception(
                     "LLM judge evaluation failed | case_id=%s | prompt=%s",
@@ -60,18 +60,17 @@ class PromptEvalRunner:
                     case.prompt_name,
                 )
 
-        # Combined Score
         if judge_score is not None:
-            combined_score = round((0.6 * heuristic_score + 0.4 * judge_score), 4)
+            combined_score = round((heuristic_score * 0.6) + (judge_score * 0.4), 4)
             score.total_score = combined_score
             score.notes.append(
-                f"Combined score used: heuristic={heuristic_score:.4f},judge={judge_score:.4f}"
+                f"Combined score used: heuristic={heuristic_score:.4f}, judge={judge_score:.4f}"
             )
         else:
             combined_score = heuristic_score
 
         logger.info(
-            "Prompt eval completed | case_id=%s | prompt=%s | score=%.3f",
+            "Prompt eval completed | case_id=%s | prompt=%s | heuristic=%.3f | judge=%s | combined=%.3f",
             case.case_id,
             case.prompt_name,
             heuristic_score,
