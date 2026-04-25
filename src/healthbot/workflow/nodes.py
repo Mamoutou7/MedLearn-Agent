@@ -13,11 +13,8 @@ from healthbot.core.exceptions import LLMServiceError
 from healthbot.core.logging import get_logger
 from healthbot.domain.models import WorkflowState
 from healthbot.infra.llm_provider import LLMProvider
-from healthbot.prompts.health_agent import (
-    build_health_agent_messages,
-    build_welcome_messages,
-)
-from healthbot.prompts.rejection import build_rejection_messages
+from healthbot.services.prompt_manager import PromptManager
+from healthbot.prompts.health_agent import build_welcome_messages
 from healthbot.services.explanation_service import ExplanationService
 from healthbot.services.health_validator import HealthValidator
 from healthbot.services.quiz_service import (
@@ -46,6 +43,7 @@ class HealthWorkflowNodes:
         self.explanation_service = ExplanationService(llm_provider)
         self.approval_service = QuizApprovalService()
         self.safety_service = SafetyService()
+        self.prompt_manager = PromptManager()
 
     # ENTRY POINT
     def entry_point(self, state: WorkflowState) -> dict:
@@ -109,13 +107,34 @@ class HealthWorkflowNodes:
             current_span.set_attribute("history.count", len(history))
 
             try:
-                prompt_messages = build_health_agent_messages(question=question)
+                prompt_messages = self.prompt_manager.render(
+                    "health_agent",
+                    question=question
+                )
+                current_span.set_attribute(
+                    "prompt.message_count",
+                    len(prompt_messages)
+                )
 
                 if history:
-                    messages = prompt_messages[:-1] + history[-4:] + [prompt_messages[-1]]
+                    injected_history = history[-4:]
+                    messages = prompt_messages[:-1] + injected_history + [prompt_messages[-1]]
+                    current_span.set_attribute("history.injected_count", len(injected_history))
                 else:
                     messages = prompt_messages
-                response = self.llm.invoke(messages)
+                    current_span.set_attribute("history.injected_count", 0)
+
+                response = self.llm.invoke(
+                    messages,
+                    span_name="llm.health_agent",
+                )
+
+                response = self.safety_service.apply(response, question=question)
+
+                content = getattr(response, "content", "")
+                if isinstance(content, str):
+                    current_span.set_attribute("response.length", len(content))
+
                 return {"messages": [response]}
 
             except Exception as exc:
@@ -134,12 +153,20 @@ class HealthWorkflowNodes:
             logger.info("Rejecting non-health question")
 
             try:
-                rejection_messages = build_rejection_messages(question=question)
+                rejection_messages = self.prompt_manager.render(
+                    "topic_rejection",
+                    question=question,
+                )
                 current_span.set_attribute("prompt.message_count", len(rejection_messages))
 
-                rejection_message = self.llm.invoke(rejection_messages).content
+                rejection_response = self.llm.invoke(
+                    rejection_messages,
+                    span_name="llm.rejection",
+                )
+                rejection_message = rejection_response.content
+
                 if isinstance(rejection_message, str):
-                    current_span.set_attribute("response.message", len(rejection_message))
+                    current_span.set_attribute("response.length", len(rejection_message))
 
                 return {
                     "messages": [AIMessage(content=rejection_message)],
@@ -152,7 +179,6 @@ class HealthWorkflowNodes:
                 current_span.record_exception(exc)
                 current_span.set_attribute("error", True)
                 logger.exception("Rejection node failed")
-
                 raise LLMServiceError("Rejection node failed") from exc
 
     # QUIZ GENERATION
