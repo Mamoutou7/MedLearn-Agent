@@ -1,4 +1,5 @@
 """Lightweight in-process metrics registry for the API and agent e2e."""
+
 from __future__ import annotations
 
 from collections import Counter

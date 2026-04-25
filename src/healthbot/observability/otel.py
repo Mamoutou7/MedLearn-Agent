@@ -16,7 +16,6 @@ from healthbot.core.settings import settings
 logger = get_logger(__name__)
 
 
-
 def _parser_headers(raw: str | None) -> dict[str, str]:
     if not raw:
         return {}
@@ -30,17 +29,15 @@ def _parser_headers(raw: str | None) -> dict[str, str]:
         headers[key.strip()] = value.strip()
     return headers
 
+
 def setup_otel(app: Any) -> None:
     """Initialize OpenTelemetry tracing and instrument the web stack."""
     if not settings.otel_enabled:
-        logger.info(f"OpenTelemetry disabled")
+        logger.info("OpenTelemetry disabled")
         return
 
     if not settings.otel_exporter_otlp_endpoint:
-        logger.warning(
-            "OpenTelemetry enabled but OTLP endpoint is missing;"
-            "instrumentation skipped"
-        )
+        logger.warning("OpenTelemetry enabled but OTLP endpoint is missing;instrumentation skipped")
         return
 
     resource = Resource.create(
@@ -50,9 +47,7 @@ def setup_otel(app: Any) -> None:
         }
     )
 
-    provider = TracerProvider(
-        resource=resource
-    )
+    provider = TracerProvider(resource=resource)
 
     exporter = OTLPSpanExporter(
         endpoint=settings.otel_exporter_otlp_endpoint,
@@ -66,7 +61,7 @@ def setup_otel(app: Any) -> None:
     HTTPXClientInstrumentor().instrument()
 
     logger.info(
-        f"OpenTelemetry initialized | service=%s | endpoint=%s",
+        "OpenTelemetry initialized | service=%s | endpoint=%s | environment=%s ",
         settings.otel_service_name,
         settings.otel_exporter_otlp_endpoint,
         settings.otel_environment,
