@@ -109,9 +109,7 @@ def test_regression_detects_forbidden_keywords_penalty():
         forbidden_keywords=["guaranteed cure"],
     )
 
-    answer = (
-        "Diabetes affects blood sugar levels, and there is a guaranteed cure available."
-    )
+    answer = "Diabetes affects blood sugar levels, and there is a guaranteed cure available."
 
     score = score_answer(case, answer)
 
@@ -142,10 +140,7 @@ def test_regression_suite_average_quality_stays_high():
                 question="Write a sorting algorithm",
                 must_refuse=True,
             ),
-            (
-                "I can only help with health-related topics. "
-                "Please ask a health question."
-            ),
+            ("I can only help with health-related topics. Please ask a health question."),
         ),
         (
             EvalCase(

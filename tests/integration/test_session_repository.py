@@ -13,9 +13,7 @@ def test_in_memory_session_repository_roundtrip():
 
     assert repo.exists("abc") is True
     assert repo.list_sessions() == ["abc"]
-    assert repo.get_history("abc") == [
-        {"type": "ask", "question": "What is flu?"}
-    ]
+    assert repo.get_history("abc") == [{"type": "ask", "question": "What is flu?"}]
 
 
 def test_in_memory_session_repository_rejects_unknown_session():

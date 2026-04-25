@@ -26,11 +26,7 @@ def test_get_session_history_route_returns_empty_history_initially(test_client):
     assert data["session_id"] == session_id
 
     history = (
-        data.get("history")
-        or data.get("events")
-        or data.get("messages")
-        or data.get("items")
-        or []
+        data.get("history") or data.get("events") or data.get("messages") or data.get("items") or []
     )
     assert history == []
 
@@ -204,10 +200,7 @@ def test_get_session_history_route_uses_service_history(test_client):
         assert data["session_id"] == "session-xyz"
 
         history = (
-                data.get("history")
-                or data.get("events")
-                or data.get("messages")
-                or data.get("items")
+            data.get("history") or data.get("events") or data.get("messages") or data.get("items")
         )
         assert history is not None
         assert len(history) == 2

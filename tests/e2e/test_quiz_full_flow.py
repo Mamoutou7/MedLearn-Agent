@@ -24,14 +24,12 @@ class FakeGraph:
                         value={
                             "question": "Would you like a short quiz?",
                             "full_summary": "Diabetes is a chronic condition "
-                                            "that affects blood sugar.",
+                            "that affects blood sugar.",
                         }
                     )
                 ],
                 "messages": [
-                    AIMessage(
-                        content="Diabetes is a chronic condition that affects blood sugar."
-                    )
+                    AIMessage(content="Diabetes is a chronic condition that affects blood sugar.")
                 ],
             }
 
@@ -67,13 +65,7 @@ class FakeGraph:
         if isinstance(payload, Command) and payload.resume == "B":
             return {
                 "messages": [
-                    AIMessage(
-                        content=(
-                            "🎉 Correct!\n"
-                            "Your answer B is correct.\n"
-                            "Score: 100%"
-                        )
-                    ),
+                    AIMessage(content=("🎉 Correct!\nYour answer B is correct.\nScore: 100%")),
                     AIMessage(content="Thanks for using HealthBot!"),
                 ]
             }

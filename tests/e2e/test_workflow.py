@@ -82,11 +82,7 @@ def test_health_agent_returns_ai_message():
 def test_quiz_generation_node_builds_multiple_choice_quiz():
     nodes = HealthWorkflowNodes(FakeLLMProvider())
 
-    state = {
-        "messages": [
-            AIMessage(content="The heart is a muscular organ that pumps blood.")
-        ]
-    }
+    state = {"messages": [AIMessage(content="The heart is a muscular organ that pumps blood.")]}
 
     result = nodes.quiz_generation_node(state)
 

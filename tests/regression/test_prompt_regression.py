@@ -47,10 +47,7 @@ def test_grounding_score_detects_source_mentions():
         expected_source_domains=["cdc.gov", "who.int"],
     )
 
-    answer = (
-        "Measles prevention relies heavily on vaccination. "
-        "Sources reviewed: cdc.gov, who.int."
-    )
+    answer = "Measles prevention relies heavily on vaccination. Sources reviewed: cdc.gov, who.int."
 
     score = score_answer(case, answer)
 
