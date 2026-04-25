@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from healthbot.core.exceptions import LLMServiceError
 from healthbot.core.logging import get_logger
 from healthbot.core.settings import settings
-from healthbot.infra.observed_llm import ObservedLLM
+from healthbot.infra.llm_observed import ObservedLLM
 from healthbot.observability.metrics import metrics
 
 logger = get_logger(__name__)
