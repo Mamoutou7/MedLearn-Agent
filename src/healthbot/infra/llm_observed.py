@@ -22,12 +22,7 @@ class ObservedLLM:
         self._llm = llm
         self._default_span_name = default_span_name
 
-    def invoke(
-            self, messages: Any,
-            *args: Any,
-            span_name: str | None = None,
-            **kwargs: Any
-    ) -> Any:
+    def invoke(self, messages: Any, *args: Any, span_name: str | None = None, **kwargs: Any) -> Any:
         effective_span_name = span_name or self._default_span_name
 
         with tracer.start_as_current_span(effective_span_name) as span:
