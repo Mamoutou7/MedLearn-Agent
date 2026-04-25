@@ -7,8 +7,7 @@ from typing import Any
 from healthbot.core.logging import get_logger
 from healthbot.evals.models import EvalCase, EvalResult
 from healthbot.evals.rubric import score_answer
-from healthbot.prompts.health_agent import build_health_agent_messages
-from healthbot.prompts.rejection import build_rejection_messages
+from healthbot.services.prompt_manager import PromptManager
 
 logger = get_logger(__name__)
 
@@ -19,6 +18,7 @@ class PromptEvalRunner:
     def __init__(self, llm, judge: Any | None = None) -> None:
         self.llm = llm
         self.judge = judge
+        self.prompt_manager = PromptManager()
 
     def load_cases(self, path: str | Path) -> list[EvalCase]:
         path = Path(path)
@@ -26,11 +26,10 @@ class PromptEvalRunner:
         return [EvalCase(**item) for item in payload]
 
     def build_messages(self, case: EvalCase):
-        if case.prompt_name == "topic_rejection":
-            return build_rejection_messages(question=case.question)
-        if case.prompt_name == "health_agent":
-            return build_health_agent_messages(question=case.question)
-        raise ValueError(f"Unsupported prompt for eval: {case.prompt_name}")
+        return self.prompt_manager.render(
+            case.prompt_name,
+            question=case.question,
+        )
 
     def run_case(self, case: EvalCase) -> EvalResult:
         messages = self.build_messages(case)
