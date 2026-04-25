@@ -10,6 +10,9 @@ from healthbot.prompts.safety import (
 logger = get_logger(__name__)
 
 
+DEFAULT_SOURCE_CONTEXT = "No external sources were retrieved for this answer."
+
+
 HEALTH_AGENT_PROMPT = PromptSpec(
     name="health_agent",
     version="v1",
@@ -29,11 +32,15 @@ Behavior rules:
 - Separate established facts from uncertainty.
 - Focus on education, not diagnosis.
 - When possible, include practical next steps the user can discuss with a clinician.
-- If web_search_tool is available, use it when recency, source verification,
-    or medical evidence matters.
+- If retrieved sources are available, use them to ground the answer.
 - Prefer high-quality medical or public-health sources when tools are used.
 - Distinguish clearly between established facts, uncertainty, and urgent red flags.
-- When using retrieved evidence, mention the source organizations or domains in the answer.
+- When using retrieved evidence, cite sources using bracket references such as [1], [2].
+- Do not invent sources or citations.
+- If no retrieved source is available, say that no external source was reviewed.
+
+Retrieved sources:
+{source_context}
                     """,
                 ),
             ),
@@ -70,8 +77,14 @@ Write a short welcome message that:
 )
 
 
-def build_health_agent_messages(question: str):
-    return HEALTH_AGENT_PROMPT.format_messages(question=question)
+def build_health_agent_messages(
+    question: str,
+    source_context: str = DEFAULT_SOURCE_CONTEXT,
+):
+    return HEALTH_AGENT_PROMPT.format_messages(
+        question=question,
+        source_context=source_context,
+    )
 
 
 def build_welcome_messages(question: str):
