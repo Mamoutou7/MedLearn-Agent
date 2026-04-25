@@ -25,11 +25,12 @@ def main() -> int:
         print("OPENAI_API_KEY is missing. Skipping prompt evaluations.")
         return 0
 
-    llm = LLMProvider().get_model()
+    llm_provider = LLMProvider()
+    llm = llm_provider.get_model()
 
     judge = None
     if os.getenv("ENABLE_LLM_JUDGE", "false").lower() == "true":
-        judge = LLMJudge(llm=llm)
+        judge = LLMJudge(llm=llm_provider.get_judge_model())
 
     runner = PromptEvalRunner(llm=llm, judge=judge)
 
