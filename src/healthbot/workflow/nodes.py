@@ -16,12 +16,14 @@ from healthbot.infra.llm_provider import LLMProvider
 from healthbot.prompts.health_agent import build_welcome_messages
 from healthbot.services.explanation_service import ExplanationService
 from healthbot.services.health_validator import HealthValidator
+from healthbot.services.medical_policy import MedicalPolicy
 from healthbot.services.prompt_manager import PromptManager
 from healthbot.services.quiz_service import (
     QuizApprovalService,
     QuizGradingService,
     QuizService,
 )
+from healthbot.services.safety_classifier import SafetyClassifier
 from healthbot.services.safety_service import SafetyService
 
 logger = get_logger(__name__)
@@ -44,6 +46,8 @@ class HealthWorkflowNodes:
         self.approval_service = QuizApprovalService()
         self.safety_service = SafetyService()
         self.prompt_manager = PromptManager()
+        self.safety_classifier = SafetyClassifier()
+        self.medical_policy = MedicalPolicy()
 
     # ENTRY POINT
     def entry_point(self, state: WorkflowState) -> dict:
@@ -106,8 +110,50 @@ class HealthWorkflowNodes:
             current_span.set_attribute("question.length", len(question))
             current_span.set_attribute("history.count", len(history))
 
+            classification = self.safety_classifier.classify(question)
+            current_span.set_attribute("safety.category", classification.category)
+            current_span.set_attribute("safety.severity", classification.severity)
+            current_span.set_attribute(
+                "safety.should_short_circuit",
+                classification.should_short_circuit,
+            )
+
+            if classification.matched_rules:
+                current_span.set_attribute(
+                    "safety.matched_rules",
+                    ",".join(classification.matched_rules),
+                )
+
+            if classification.should_short_circuit:
+                logger.warning(
+                    "Safety classifier short-circuited LLM call | category=%s | severity=%s",
+                    classification.category,
+                    classification.severity,
+                )
+                current_span.set_attribute("llm.skipped", True)
+
+                return {
+                    "messages": [
+                        AIMessage(
+                            content=classification.message
+                            or (
+                                "This may require urgent medical attention. "
+                                "Please contact emergency services or a qualified healthcare \
+                                professional."
+                            )
+                        )
+                    ],
+                    "answer": classification.message,
+                    "safety_short_circuit": True,
+                    "safety_category": classification.category,
+                    "safety_severity": classification.severity,
+                }
+
             try:
-                prompt_messages = self.prompt_manager.render("health_agent", question=question)
+                prompt_messages = self.prompt_manager.render(
+                    "health_agent",
+                    question=question,
+                )
                 current_span.set_attribute("prompt.message_count", len(prompt_messages))
 
                 if history:
@@ -124,6 +170,7 @@ class HealthWorkflowNodes:
                 )
 
                 response = self.safety_service.apply(response, question=question)
+                response = self.medical_policy.enforce_on_message(response)
 
                 content = getattr(response, "content", "")
                 if isinstance(content, str):
