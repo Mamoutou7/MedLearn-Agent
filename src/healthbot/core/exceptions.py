@@ -17,31 +17,37 @@ class HealthBotError(Exception):
 
 class ConfigurationError(HealthBotError):
     """Raised when application configuration is invalid or incomplete."""
+
     status_code = 500
 
 
 class ValidationError(HealthBotError):
     """Raised when a user request fails domain validation."""
+
     status_code = 422
 
 
 class LLMServiceError(HealthBotError):
     """Raised when interaction with the LLM fails."""
+
     status_code = 502
 
 
 class ToolExecutionError(HealthBotError):
     """Raised when an external tool fails."""
+
     status_code = 502
 
 
 class WorkflowError(HealthBotError):
     """Raised when the LangGraph e2e encounters an invalid state."""
+
     status_code = 400
 
 
 class SessionBackendUnavailableError(HealthBotError):
     """Raised when the configured session backend is unavailable."""
+
     status_code = 503
 
 

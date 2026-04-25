@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, alias="DEBUG")
     api_host: str = Field(default="0.0.0.0", alias="API_HOST")
     api_port: int = Field(default=8000, alias="API_PORT")
-    api_key: str | None = Field(default="#M@mOu92", alias="API_KEY")
+    api_key: str | None = Field(default="your_api_key", alias="API_KEY")
 
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO",
@@ -63,10 +63,7 @@ class Settings(BaseSettings):
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
     redis_key_prefix: str = Field(default="medlearn", alias="REDIS_KEY_PREFIX")
     session_ttl_seconds: int = Field(default=86400, alias="SESSION_TTL_SECONDS")
-    session_sqlite_path: str = Field(
-        default=".data/sessions.db",
-        alias="SESSION_SQLITE_PATH"
-    )
+    session_sqlite_path: str = Field(default=".data/sessions.db", alias="SESSION_SQLITE_PATH")
 
     checkpoint_backend: Literal["memory", "redis", "sqlite"] = Field(
         default="sqlite",
@@ -107,7 +104,6 @@ class Settings(BaseSettings):
         alias="OTEL_EXPORTER_OTLP_HEADERS",
     )
     otel_environment: str = Field(default="development", alias="OTEL_ENVIRONMENT")
-
 
     @field_validator("redis_key_prefix")
     @classmethod
