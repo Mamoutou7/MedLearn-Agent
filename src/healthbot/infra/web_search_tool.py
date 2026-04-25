@@ -14,6 +14,8 @@ from healthbot.observability.metrics import metrics
 logger = get_logger(__name__)
 tracer = trace.get_tracer(__name__)
 
+SEARCH_DEPTH = "advanced"
+MAX_RESULTS = 8
 
 def _extract_domain(url: str | None) -> str | None:
     if not url:
@@ -48,24 +50,22 @@ def web_search_tool(question: str) -> dict:
     if not question or not question.strip():
         raise ToolExecutionError("Web search question cannot be empty")
 
-    max_results = 8
-    search_depth = "advanced"
-
     with tracer.start_as_current_span("tool.web_search") as current_span:
         current_span.set_attribute("tool.name", "web_search_tool")
         current_span.set_attribute("question.length", len(question))
-        current_span.set_attribute("search.max_results", max_results)
-        current_span.set_attribute("search.depth", search_depth)
+        current_span.set_attribute("search.max_results", MAX_RESULTS)
+        current_span.set_attribute("search.depth", SEARCH_DEPTH)
 
         try:
             metrics.increment("tool.web_search.calls")
             client = get_search_provider()
             results = client.search(
                 question,
-                search_depth=search_depth,
-                max_results=max_results,
+                search_depth=SEARCH_DEPTH,
+                max_results=MAX_RESULTS,
             )
         except Exception as exc:
+            metrics.increment("tool.web_search.errors")
             current_span.record_exception(exc)
             current_span.set_attribute("error", True)
             logger.exception("Web search tool failed")
@@ -113,5 +113,6 @@ def web_search_tool(question: str) -> dict:
         return {
             "query": question,
             "results": curated_results[: settings.source_result_limit],
+            "trusted_result_count": trusted_count,
             "trusted_domains_considered": settings.trusted_health_domains,
         }
