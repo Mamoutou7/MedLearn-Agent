@@ -26,9 +26,19 @@ class PromptEvalRunner:
         return [EvalCase(**item) for item in payload]
 
     def build_messages(self, case: EvalCase):
+        """Build prompt messages for a prompt evaluation case."""
+        prompt_kwargs = {
+            "question": case.question,
+        }
+
+        if case.prompt_name == "health_agent":
+            prompt_kwargs["source_context"] = (
+                "No external sources were retrieved for this evaluation case."
+            )
+
         return self.prompt_manager.render(
             case.prompt_name,
-            question=case.question,
+            **prompt_kwargs,
         )
 
     def run_case(self, case: EvalCase) -> EvalResult:
