@@ -11,11 +11,12 @@ from opentelemetry import trace
 
 from healthbot.core.exceptions import LLMServiceError
 from healthbot.core.logging import get_logger
+from healthbot.domain.evidence import EvidenceSource
 from healthbot.domain.models import WorkflowState
 from healthbot.infra.llm_provider import LLMProvider
+from healthbot.infra.web_search_tool import web_search_tool
 from healthbot.prompts.health_agent import build_welcome_messages
 from healthbot.services.answer_composer import AnswerComposer
-from healthbot.domain.evidence import EvidenceSource
 from healthbot.services.explanation_service import ExplanationService
 from healthbot.services.health_validator import HealthValidator
 from healthbot.services.medical_policy import MedicalPolicy
@@ -25,7 +26,6 @@ from healthbot.services.quiz_service import (
     QuizGradingService,
     QuizService,
 )
-from healthbot.infra.web_search_tool import web_search_tool
 from healthbot.services.safety_classifier import SafetyClassifier
 from healthbot.services.safety_service import SafetyService
 
