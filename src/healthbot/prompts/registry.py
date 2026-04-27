@@ -3,7 +3,6 @@ from __future__ import annotations
 from healthbot.prompts.base import PromptSpec
 from healthbot.prompts.health_agent import (
     HEALTH_AGENT_PROMPT,
-    HEALTH_AGENT_PROMPT_V2,
     WELCOME_PROMPT,
 )
 from healthbot.prompts.health_validator import HEALTH_VALIDATOR_PROMPT
@@ -17,7 +16,6 @@ PromptKey = tuple[str, str]
 PROMPT_REGISTRY: dict[PromptKey, PromptSpec] = {
     (HEALTH_VALIDATOR_PROMPT.name, HEALTH_VALIDATOR_PROMPT.version): HEALTH_VALIDATOR_PROMPT,
     (HEALTH_AGENT_PROMPT.name, HEALTH_AGENT_PROMPT.version): HEALTH_AGENT_PROMPT,
-    (HEALTH_AGENT_PROMPT_V2.name, HEALTH_AGENT_PROMPT_V2.version): HEALTH_AGENT_PROMPT_V2,
     (WELCOME_PROMPT.name, WELCOME_PROMPT.version): WELCOME_PROMPT,
     (QUIZ_GENERATION_PROMPT.name, QUIZ_GENERATION_PROMPT.version): QUIZ_GENERATION_PROMPT,
     (QUIZ_EXPLANATION_PROMPT.name, QUIZ_EXPLANATION_PROMPT.version): QUIZ_EXPLANATION_PROMPT,
