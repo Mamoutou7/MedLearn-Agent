@@ -8,24 +8,14 @@ from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True)
 class PromptSpec:
-    """
-    Immutable prompt definition.
-
-    Attributes
-    ----------
-    name : str
-        Stable prompt identifier.
-    version : str
-        Prompt version for observability and evolution tracking.
-    template : ChatPromptTemplate
-        LangChain prompt template.
-    """
-
     name: str
     version: str
     template: ChatPromptTemplate
+    description: str = ""
+    owner: str = "ai"
+    status: str = "active"
 
     def format_messages(self, **kwargs: Any) -> list[BaseMessage]:
         """

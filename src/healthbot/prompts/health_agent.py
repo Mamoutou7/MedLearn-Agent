@@ -50,6 +50,37 @@ Retrieved sources:
 )
 
 
+HEALTH_AGENT_PROMPT_V2 = PromptSpec(
+    name="health_agent",
+    version="v2",
+    template=build_chat_prompt(
+        [
+            (
+                "system",
+                compose_system_prompt(
+                    GLOBAL_MEDICAL_SAFETY_RULES,
+                    """
+You are HealthBot, a careful health education assistant.
+
+Rules:
+- Be concise.
+- Use retrieved sources when available.
+- Cite sources with [1], [2].
+- Clearly separate urgent red flags from general education.
+- Never provide a diagnosis.
+- Never provide personalized medication changes.
+
+Retrieved sources:
+{source_context}
+                    """,
+                ),
+            ),
+            ("user", "{question}"),
+        ]
+    ),
+)
+
+
 WELCOME_PROMPT = PromptSpec(
     name="healthbot_welcome",
     version="v1",

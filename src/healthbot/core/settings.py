@@ -105,6 +105,26 @@ class Settings(BaseSettings):
     )
     otel_environment: str = Field(default="development", alias="OTEL_ENVIRONMENT")
 
+    health_agent_prompt_version: str = Field(
+        default="v1",
+        alias="HEALTH_AGENT_PROMPT_VERSION",
+    )
+
+    topic_rejection_prompt_version: str = Field(
+        default="v1",
+        alias="TOPIC_REJECTION_PROMPT_VERSION",
+    )
+
+    quiz_generation_prompt_version: str = Field(
+        default="v1",
+        alias="QUIZ_GENERATION_PROMPT_VERSION",
+    )
+
+    judge_prompt_version: str = Field(
+        default="v1",
+        alias="JUDGE_PROMPT_VERSION",
+    )
+
     @field_validator("redis_key_prefix")
     @classmethod
     def validate_redis_key_prefix(cls, value: str) -> str:
