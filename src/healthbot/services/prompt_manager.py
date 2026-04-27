@@ -16,9 +16,9 @@ tracer = trace.get_tracer(__name__)
 class PromptManager:
     """Central access point for prompt rendering and prompt-version observability."""
 
-    def render(self, name: str, **kwargs: Any) -> list[BaseMessage]:
+    def render(self, name: str, *, version: str | None = None, **kwargs: Any) -> list[BaseMessage]:
         """Render a registered prompt into LangChain messages."""
-        prompt = get_prompt(name)
+        prompt = get_prompt(name, version=version)
 
         with tracer.start_as_current_span("prompt.render") as span:
             span.set_attribute("prompt.name", prompt.name)
