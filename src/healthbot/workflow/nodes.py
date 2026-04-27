@@ -11,6 +11,7 @@ from opentelemetry import trace
 
 from healthbot.core.exceptions import LLMServiceError
 from healthbot.core.logging import get_logger
+from healthbot.core.settings import settings
 from healthbot.domain.evidence import EvidenceSource
 from healthbot.domain.models import WorkflowState
 from healthbot.infra.llm_provider import LLMProvider
@@ -203,6 +204,7 @@ class HealthWorkflowNodes:
             try:
                 prompt_messages = self.prompt_manager.render(
                     "health_agent",
+                    version=settings.health_agent_prompt_version,
                     question=question,
                     source_context=source_context,
                 )
@@ -294,6 +296,7 @@ class HealthWorkflowNodes:
             try:
                 rejection_messages = self.prompt_manager.render(
                     "topic_rejection",
+                    version=settings.topic_rejection_prompt_version,
                     question=question,
                 )
                 current_span.set_attribute("prompt.message_count", len(rejection_messages))
