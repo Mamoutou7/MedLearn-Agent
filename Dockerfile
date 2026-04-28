@@ -16,6 +16,11 @@ COPY scripts ./scripts
 RUN pip install --upgrade pip setuptools wheel \
     && pip install -e .
 
+RUN adduser --disabled-password --gecos "" --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+
+USER appuser
+
 EXPOSE 8000
 
 CMD ["uvicorn", "healthbot.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

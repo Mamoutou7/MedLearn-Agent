@@ -13,6 +13,9 @@ spec:
       labels:
         app: medlearn-agent
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
       containers:
         - name: medlearn-agent
           image: medlearn-agent:local
@@ -24,6 +27,12 @@ spec:
                 name: medlearn-config
             - secretRef:
                 name: medlearn-secrets
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
           readinessProbe:
             httpGet:
               path: /api/v1/ready
