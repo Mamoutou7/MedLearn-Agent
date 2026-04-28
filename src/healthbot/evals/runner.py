@@ -33,11 +33,13 @@ class PromptEvalRunner:
 
         if case.prompt_name == "health_agent":
             prompt_kwargs["source_context"] = (
-                "No external sources were retrieved for this evaluation case."
+                case.source_context
+                or "No external sources were retrieved for this evaluation case."
             )
 
         return self.prompt_manager.render(
             case.prompt_name,
+            version=case.prompt_version,
             **prompt_kwargs,
         )
 

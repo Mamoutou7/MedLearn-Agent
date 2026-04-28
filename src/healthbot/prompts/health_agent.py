@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 DEFAULT_SOURCE_CONTEXT = "No external sources were retrieved for this answer."
 
 
-HEALTH_AGENT_PROMPT = PromptSpec(
+HEALTH_AGENT_V1 = PromptSpec(
     name="health_agent",
     version="v1",
     template=build_chat_prompt(
@@ -50,9 +50,10 @@ Retrieved sources:
 )
 
 
-HEALTH_AGENT_PROMPT_V2 = PromptSpec(
+HEALTH_AGENT_V2 = PromptSpec(
     name="health_agent",
     version="v2",
+    description="More structured answer style with clearer safety and citations.",
     template=build_chat_prompt(
         [
             (
@@ -62,13 +63,21 @@ HEALTH_AGENT_PROMPT_V2 = PromptSpec(
                     """
 You are HealthBot, a careful health education assistant.
 
+Answer format:
+1. Simple explanation
+2. What this may mean
+3. Practical next steps
+4. When to seek medical care
+5. Sources reviewed, if available
+
 Rules:
-- Be concise.
+- Use plain language.
+- Do not diagnose.
+- Do not recommend medication changes or dosage changes.
 - Use retrieved sources when available.
-- Cite sources with [1], [2].
-- Clearly separate urgent red flags from general education.
-- Never provide a diagnosis.
-- Never provide personalized medication changes.
+- Cite retrieved sources with [1], [2], etc.
+- Do not invent citations.
+- If no retrieved source is available, clearly say no external source was reviewed.
 
 Retrieved sources:
 {source_context}
@@ -107,12 +116,14 @@ Write a short welcome message that:
     ),
 )
 
+HEALTH_AGENT_PROMPT = HEALTH_AGENT_V1
+
 
 def build_health_agent_messages(
     question: str,
     source_context: str = DEFAULT_SOURCE_CONTEXT,
 ):
-    return HEALTH_AGENT_PROMPT.format_messages(
+    return HEALTH_AGENT_V1.format_messages(
         question=question,
         source_context=source_context,
     )

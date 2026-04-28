@@ -11,11 +11,13 @@ class EvalCase:
     case_id: str
     prompt_name: str
     question: str
+    prompt_version: str | None = None
     expected_keywords: list[str] = field(default_factory=list)
     forbidden_keywords: list[str] = field(default_factory=list)
     must_refuse: bool = False
     must_include_disclaimer: bool = False
     expected_source_domains: list[str] = field(default_factory=list)
+    source_context: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
