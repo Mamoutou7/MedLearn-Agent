@@ -8,6 +8,8 @@ data:
   DEBUG: "false"
   LOG_LEVEL: "INFO"
   ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000,http://medlearn.local"
+  CHECKPOINT_SQLITE_PATH: "/tmp/langgraph_checkpoints.db"
+  SESSION_SQLITE_PATH: "/tmp/sessions.db"
 
   MODEL_NAME: "gpt-4o-mini"
   JUDGE_MODEL_NAME: "gpt-4o-mini"
