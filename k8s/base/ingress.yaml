@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: http://127.0.0.1:8000/
+    - host: medlearn.local
       http:
         paths:
           - path: /
