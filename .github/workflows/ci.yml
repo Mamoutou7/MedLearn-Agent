@@ -216,3 +216,27 @@ jobs:
           tags: |
             ghcr.io/Mamoutou7/medlearn-agent:${{ github.sha }}
             ghcr.io/Mamoutou7/medlearn-agent:latest
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs:
+      - build-image
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
+
+      - name: Set image
+        run: |
+          kubectl -n medlearn set image deployment/medlearn-agent \
+            medlearn-agent=ghcr.io/Mamoutou7/medlearn-agent:${{ github.sha }}
+
+      - name: Wait for rollout
+        run: |
+          kubectl -n medlearn rollout status deployment/medlearn-agent
