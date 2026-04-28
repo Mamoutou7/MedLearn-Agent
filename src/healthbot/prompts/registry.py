@@ -2,34 +2,40 @@ from __future__ import annotations
 
 from healthbot.prompts.base import PromptSpec
 from healthbot.prompts.health_agent import (
-    HEALTH_AGENT_PROMPT,
+    HEALTH_AGENT_V1,
+    HEALTH_AGENT_V2,
     WELCOME_PROMPT,
 )
 from healthbot.prompts.health_validator import HEALTH_VALIDATOR_PROMPT
+from healthbot.prompts.judge import JUDGE_PROMPT
 from healthbot.prompts.quiz_explanation import QUIZ_EXPLANATION_PROMPT
 from healthbot.prompts.quiz_generation import QUIZ_GENERATION_PROMPT
-from healthbot.prompts.rejection import REJECTION_PROMPT
+from healthbot.prompts.rejection import TOPIC_REJECTION_V1, TOPIC_REJECTION_V2
 
 PromptKey = tuple[str, str]
 
 
 PROMPT_REGISTRY: dict[PromptKey, PromptSpec] = {
-    (HEALTH_VALIDATOR_PROMPT.name, HEALTH_VALIDATOR_PROMPT.version): HEALTH_VALIDATOR_PROMPT,
-    (HEALTH_AGENT_PROMPT.name, HEALTH_AGENT_PROMPT.version): HEALTH_AGENT_PROMPT,
     (WELCOME_PROMPT.name, WELCOME_PROMPT.version): WELCOME_PROMPT,
+    (HEALTH_AGENT_V1.name, HEALTH_AGENT_V1.version): HEALTH_AGENT_V1,
+    (HEALTH_AGENT_V2.name, HEALTH_AGENT_V2.version): HEALTH_AGENT_V2,
+    (TOPIC_REJECTION_V1.name, TOPIC_REJECTION_V1.version): TOPIC_REJECTION_V1,
+    (TOPIC_REJECTION_V2.name, TOPIC_REJECTION_V2.version): TOPIC_REJECTION_V2,
     (QUIZ_GENERATION_PROMPT.name, QUIZ_GENERATION_PROMPT.version): QUIZ_GENERATION_PROMPT,
     (QUIZ_EXPLANATION_PROMPT.name, QUIZ_EXPLANATION_PROMPT.version): QUIZ_EXPLANATION_PROMPT,
-    (REJECTION_PROMPT.name, REJECTION_PROMPT.version): REJECTION_PROMPT,
+    (HEALTH_VALIDATOR_PROMPT.name, HEALTH_VALIDATOR_PROMPT.version): HEALTH_VALIDATOR_PROMPT,
+    (JUDGE_PROMPT.name, JUDGE_PROMPT.version): JUDGE_PROMPT,
 }
 
-
 DEFAULT_PROMPT_VERSIONS: dict[str, str] = {
-    HEALTH_VALIDATOR_PROMPT.name: HEALTH_VALIDATOR_PROMPT.version,
-    HEALTH_AGENT_PROMPT.name: HEALTH_AGENT_PROMPT.version,
     WELCOME_PROMPT.name: WELCOME_PROMPT.version,
+    HEALTH_AGENT_V1.name: HEALTH_AGENT_V1.version,
+    HEALTH_AGENT_V2.name: HEALTH_AGENT_V2.version,
+    TOPIC_REJECTION_V1.name: TOPIC_REJECTION_V1.version,
+    TOPIC_REJECTION_V2.name: TOPIC_REJECTION_V2.version,
     QUIZ_GENERATION_PROMPT.name: QUIZ_GENERATION_PROMPT.version,
     QUIZ_EXPLANATION_PROMPT.name: QUIZ_EXPLANATION_PROMPT.version,
-    REJECTION_PROMPT.name: REJECTION_PROMPT.version,
+    HEALTH_VALIDATOR_PROMPT.name: HEALTH_VALIDATOR_PROMPT.version,
 }
 
 

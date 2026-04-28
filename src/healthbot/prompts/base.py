@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
@@ -28,7 +27,7 @@ class PromptSpec:
         return f"{self.name}:{self.version}"
 
 
-def build_chat_prompt(messages: Iterable[tuple[str, str]]) -> ChatPromptTemplate:
+def build_chat_prompt(messages: list[tuple[str, str]]) -> ChatPromptTemplate:
     """
     Small factory to standardize ChatPromptTemplate creation.
     """
