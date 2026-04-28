@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: medlearn-agent
-          image: ghcr.io/Mamoutou7/medlearn-agent:latest
-          imagePullPolicy: IfNotPresent
+          image: medlearn-agent:local
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
           envFrom:
