@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medlearn-agent
+  namespace: medlearn
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: medlearn-agent
+  template:
+    metadata:
+      labels:
+        app: medlearn-agent
+    spec:
+      containers:
+        - name: medlearn-agent
+          image: ghcr.io/Mamoutou7/medlearn-agent:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: medlearn-config
+            - secretRef:
+                name: medlearn-secrets
+          readinessProbe:
+            httpGet:
+              path: /api/v1/ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 3
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
