@@ -13,6 +13,9 @@ COPY pyproject.toml README.md ./
 COPY src ./src
 COPY scripts ./scripts
 
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 RUN pip install --upgrade pip setuptools wheel \
     && pip install -e .
 
