@@ -4,10 +4,14 @@ import json
 from pathlib import Path
 from typing import Any
 
+from langchain_core.messages import AIMessage
+
 from healthbot.core.logging import get_logger
 from healthbot.evals.models import EvalCase, EvalResult
 from healthbot.evals.rubric import score_answer
+from healthbot.services.medical_policy import MedicalPolicy
 from healthbot.services.prompt_manager import PromptManager
+from healthbot.services.safety_service import SafetyService
 
 logger = get_logger(__name__)
 
@@ -19,6 +23,8 @@ class PromptEvalRunner:
         self.llm = llm
         self.judge = judge
         self.prompt_manager = PromptManager()
+        self.safety_service = SafetyService()
+        self.medical_policy = MedicalPolicy()
 
     def load_cases(self, path: str | Path) -> list[EvalCase]:
         path = Path(path)
@@ -51,6 +57,12 @@ class PromptEvalRunner:
         )
 
         answer = response.content if hasattr(response, "content") else str(response)
+
+        if case.prompt_name == "health_agent":
+            message = AIMessage(content=answer)
+            message = self.safety_service.apply(message, question=case.question)
+            message = self.medical_policy.enforce_on_message(message)
+            answer = str(message.content)
 
         score = score_answer(case, answer)
         heuristic_score = score.total_score
