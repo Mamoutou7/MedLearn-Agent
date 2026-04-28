@@ -75,6 +75,7 @@ def main() -> int:
                 "case_id": result.case.case_id,
                 "prompt_name": result.case.prompt_name,
                 "question": result.case.question,
+                "prompt_version": result.case.prompt_version,
                 "answer": result.answer,
                 "heuristic_score": round(heuristic_score, 4),
                 "judge_score": round(judge_score, 4) if judge_score is not None else None,
