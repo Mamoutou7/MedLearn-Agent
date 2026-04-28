@@ -214,8 +214,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/Mamoutou7/medlearn-agent:${{ github.sha }}
-            ghcr.io/Mamoutou7/medlearn-agent:latest
+            ghcr.io/mamoutou7/medlearn-agent:${{ github.sha }}
+            ghcr.io/mamoutou7/medlearn-agent:latest
 
   deploy-staging:
     runs-on: ubuntu-latest
@@ -235,7 +235,7 @@ jobs:
       - name: Set image
         run: |
           kubectl -n medlearn set image deployment/medlearn-agent \
-            medlearn-agent=ghcr.io/Mamoutou7/medlearn-agent:${{ github.sha }}
+            medlearn-agent=ghcr.io/mamoutou7/medlearn-agent:${{ github.sha }}
 
       - name: Wait for rollout
         run: |
