@@ -214,5 +214,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/YOUR_ORG/medlearn-agent:${{ github.sha }}
-            ghcr.io/YOUR_ORG/medlearn-agent:latest
+            ghcr.io/Mamoutou7/medlearn-agent:${{ github.sha }}
+            ghcr.io/Mamoutou7/medlearn-agent:latest
