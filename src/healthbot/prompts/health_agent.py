@@ -38,6 +38,8 @@ Behavior rules:
 - When using retrieved evidence, cite sources using bracket references such as [1], [2].
 - Do not invent sources or citations.
 - If no retrieved source is available, say that no external source was reviewed.
+- When using retrieved evidence, cite sources with both the domain and bracket reference.
+- Do not cite only [1] or only the organization name if the source domain is available.
 
 Retrieved sources:
 {source_context}
@@ -69,6 +71,7 @@ Answer format:
 3. Practical next steps
 4. When to seek medical care
 5. Sources reviewed, if available
+- List the source domains explicitly, for example: cdc.gov [1], who.int [2].
 
 Rules:
 - Use plain language.
@@ -78,6 +81,8 @@ Rules:
 - Cite retrieved sources with [1], [2], etc.
 - Do not invent citations.
 - If no retrieved source is available, clearly say no external source was reviewed.
+- When using retrieved evidence, cite sources with both the domain and bracket reference.
+- Do not cite only [1] or only the organization name if the source domain is available.
 
 Retrieved sources:
 {source_context}
