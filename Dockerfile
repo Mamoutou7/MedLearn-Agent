@@ -17,10 +17,12 @@ RUN pip install --upgrade pip setuptools wheel \
     && pip install -e .
 
 RUN adduser --disabled-password --gecos "" --uid 10001 appuser \
-    && chown -R appuser:appuser /app
+    && mkdir -p /app/.data /tmp/medlearn \
+    && chown -R appuser:appuser /app /tmp/medlearn
+
 
 USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "healthbot.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn healthbot.api.app:app --host 0.0.0.0 --port ${PORT:-8000}"]
