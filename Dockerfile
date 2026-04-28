@@ -1,4 +1,21 @@
-FROM ubuntu:latest
-LABEL authors="mamoutoufofana"
+FROM python:3.13-slim
 
-ENTRYPOINT ["top", "-b"]
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY scripts ./scripts
+
+RUN pip install --upgrade pip setuptools wheel \
+    && pip install -e .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "healthbot.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
