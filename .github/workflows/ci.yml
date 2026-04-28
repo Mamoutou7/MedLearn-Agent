@@ -61,6 +61,7 @@ jobs:
       TAVILY_API_KEY: test-tavily-key
       OPENAI_BASE_URL: https://openai.vocareum.com/v1
       MODEL_NAME: gpt-4o-mini
+      JUDGE_MODEL_NAME: gpt-4o
       APP_ENV: test
       DEBUG: "false"
       API_KEY: test-api-key
@@ -118,6 +119,7 @@ jobs:
       TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
       OPENAI_BASE_URL: https://openai.vocareum.com/v1
       MODEL_NAME: gpt-4o-mini
+      JUDGE_MODEL_NAME: gpt-4o
       APP_ENV: test
       DEBUG: "false"
       API_KEY: your_api_key
@@ -221,7 +223,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build-image
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' && secrets.KUBE_CONFIG_DATA != ''
 
     steps:
       - name: Checkout repository
