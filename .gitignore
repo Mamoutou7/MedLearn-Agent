@@ -25,6 +25,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+k8s/base/secret.yaml
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
