@@ -13,16 +13,12 @@ COPY pyproject.toml README.md ./
 COPY src ./src
 COPY scripts ./scripts
 
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
 RUN pip install --upgrade pip setuptools wheel \
     && pip install -e .
 
 RUN adduser --disabled-password --gecos "" --uid 10001 appuser \
     && mkdir -p /app/.data /tmp/medlearn \
     && chown -R appuser:appuser /app /tmp/medlearn
-
 
 USER appuser
 
