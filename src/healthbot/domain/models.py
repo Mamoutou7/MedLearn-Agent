@@ -27,6 +27,10 @@ class WorkflowState(MessagesState):
     source_query: str = ""
     grounding_used: bool = False
 
+    session_id: str = ""
+    prompt_versions: dict[str, str] = {}
+    experiment_assignments: dict[str, str] = {}
+
     # Quiz state
     quiz_question: str = ""
     quiz_options: dict[str, str] = {}
