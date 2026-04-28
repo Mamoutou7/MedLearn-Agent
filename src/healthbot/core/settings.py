@@ -125,6 +125,16 @@ class Settings(BaseSettings):
         alias="JUDGE_PROMPT_VERSION",
     )
 
+    prompt_ab_testing_enabled: bool = Field(
+        default=False,
+        alias="PROMPT_AB_TESTING_ENABLED",
+    )
+
+    health_agent_prompt_ab_weights_raw: str = Field(
+        default="v1:100",
+        alias="HEALTH_AGENT_PROMPT_AB_WEIGHTS",
+    )
+
     @field_validator("redis_key_prefix")
     @classmethod
     def validate_redis_key_prefix(cls, value: str) -> str:
