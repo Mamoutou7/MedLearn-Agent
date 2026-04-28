@@ -101,7 +101,7 @@ class SessionService:
             current_span.set_attribute("question.backend", self.settings.session_backend)
             try:
                 result = self._graph.invoke(
-                    {"question": question},
+                    {"question": question, "session_id": session_id},
                     config={"configurable": {"thread_id": session_id}},
                 )
                 payload = self._normalize_result(result)
