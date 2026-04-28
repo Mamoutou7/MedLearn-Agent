@@ -21,6 +21,7 @@ from healthbot.services.answer_composer import AnswerComposer
 from healthbot.services.explanation_service import ExplanationService
 from healthbot.services.health_validator import HealthValidator
 from healthbot.services.medical_policy import MedicalPolicy
+from healthbot.services.prompt_experiment_resolver import PromptExperimentResolver
 from healthbot.services.prompt_manager import PromptManager
 from healthbot.services.quiz_service import (
     QuizApprovalService,
@@ -53,6 +54,7 @@ class HealthWorkflowNodes:
         self.safety_classifier = SafetyClassifier()
         self.medical_policy = MedicalPolicy()
         self.answer_composer = AnswerComposer()
+        self.prompt_experiment_resolver = PromptExperimentResolver()
 
     # ENTRY POINT
     def entry_point(self, state: WorkflowState) -> dict:
@@ -119,6 +121,15 @@ class HealthWorkflowNodes:
                 }
 
             try:
+                existing_sources = state.get("sources", [])
+                if existing_sources:
+                    current_span.set_attribute("retrieval.skipped_existing_sources", True)
+                    return {
+                        "sources": existing_sources,
+                        "source_query": state.get("source_query", question),
+                        "grounding_used": bool(existing_sources),
+                    }
+
                 result = web_search_tool.invoke(question)
 
                 sources = result.get("results", [])
@@ -158,9 +169,12 @@ class HealthWorkflowNodes:
 
         logger.info("Running health agent")
 
+        session_id = state.get("session_id", "") or "anonymous"
+
         with tracer.start_as_current_span("workflow.health_agent") as current_span:
             current_span.set_attribute("question.length", len(question))
             current_span.set_attribute("history.count", len(history))
+            current_span.set_attribute("source.count", len(sources))
 
             classification = self.safety_classifier.classify(question)
             current_span.set_attribute("safety.category", classification.category)
@@ -184,27 +198,37 @@ class HealthWorkflowNodes:
                 )
                 current_span.set_attribute("llm.skipped", True)
 
+                message = classification.message or (
+                    "This may require urgent medical attention. "
+                    "Please contact emergency services or a qualified healthcare professional."
+                )
+
                 return {
-                    "messages": [
-                        AIMessage(
-                            content=classification.message
-                            or (
-                                "This may require urgent medical attention. "
-                                "Please contact emergency services or a qualified healthcare \
-                                professional."
-                            )
-                        )
-                    ],
-                    "answer": classification.message,
+                    "messages": [AIMessage(content=message)],
+                    "answer": message,
                     "safety_short_circuit": True,
                     "safety_category": classification.category,
                     "safety_severity": classification.severity,
                 }
 
             try:
+                assignment = self.prompt_experiment_resolver.resolve(
+                    prompt_name="health_agent",
+                    session_id=session_id,
+                    default_version=settings.health_agent_prompt_version,
+                    weights_raw=settings.health_agent_prompt_ab_weights_raw,
+                )
+
+                current_span.set_attribute("prompt.health_agent.version", assignment.version)
+                current_span.set_attribute(
+                    "prompt.health_agent.ab_enabled",
+                    assignment.experiment_enabled,
+                )
+                current_span.set_attribute("prompt.health_agent.bucket", assignment.bucket)
+
                 prompt_messages = self.prompt_manager.render(
                     "health_agent",
-                    version=settings.health_agent_prompt_version,
+                    version=assignment.version,
                     question=question,
                     source_context=source_context,
                 )
@@ -239,9 +263,10 @@ class HealthWorkflowNodes:
                 ]
 
                 content = getattr(response, "content", "")
-                if isinstance(content, str) and evidence_sources:
+                if isinstance(content, str):
                     current_span.set_attribute("response.length", len(content))
 
+                if isinstance(content, str) and evidence_sources:
                     response = AIMessage(
                         content=self.answer_composer.compose(
                             content,
@@ -252,7 +277,20 @@ class HealthWorkflowNodes:
                         response_metadata=response.response_metadata,
                     )
 
-                return {"messages": [response]}
+                final_content = (
+                    response.content if isinstance(response.content, str) else str(response.content)
+                )
+
+                return {
+                    "messages": [response],
+                    "answer": final_content,
+                    "prompt_versions": {
+                        "health_agent": assignment.version,
+                    },
+                    "experiment_assignments": {
+                        "health_agent": f"{assignment.version}:{assignment.bucket}",
+                    },
+                }
 
             except Exception as exc:
                 current_span.record_exception(exc)
@@ -261,15 +299,17 @@ class HealthWorkflowNodes:
                 raise LLMServiceError("Agent execution failed") from exc
 
     def _format_sources_for_prompt(self, sources: list[dict]) -> str:
+        """Format retrieved sources into prompt-ready context."""
         if not sources:
             return "No external sources were retrieved."
 
-        lines = []
+        lines: list[str] = []
+
         for idx, source in enumerate(sources, start=1):
             title = source.get("title") or "Untitled source"
             domain = source.get("domain") or "unknown source"
-            content = source.get("content") or ""
             url = source.get("url") or ""
+            content = source.get("content") or ""
 
             lines.append(
                 "\n".join(
@@ -478,12 +518,15 @@ class HealthWorkflowNodes:
             answer = interrupt({"quiz_question": state["quiz_question"]})
             answer = str(answer).upper().strip()
 
-            current_span.set_attribute("quiz.answer", answer)
+            is_valid_answer = self.grading_service.validate_answer(answer)
 
-            if not self.grading_service.validate_answer(answer):
+            current_span.set_attribute("quiz.answer.length", len(answer))
+            current_span.set_attribute("quiz.answer.valid", is_valid_answer)
+
+            if not is_valid_answer:
                 logger.warning("Invalid quiz answer received")
-
                 return Command(goto="end_workflow")
+
             return Command(
                 goto="quiz_grader",
                 update={"user_quiz_answer": answer},
@@ -508,8 +551,8 @@ class HealthWorkflowNodes:
             user_answer = state.get("user_quiz_answer")
             correct_answer = state.get("quiz_correct_answer")
 
-            current_span.set_attribute("quiz.user_answer", str(user_answer))
-            current_span.set_attribute("quiz.correct_answer", str(correct_answer))
+            current_span.set_attribute("quiz.user_answer.length", len(str(user_answer or "")))
+            current_span.set_attribute("quiz.correct_answer.length", len(str(correct_answer or "")))
 
             try:
                 grading_result = self.grading_service.grade(
